@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { ADMIN_ROLES } from "@/lib/roles";
 
 export async function requireSession() {
   const session = await auth();
@@ -16,3 +17,15 @@ export async function requireUserId() {
   const session = await requireSession();
   return session.user.id;
 }
+
+const adminRoles = ADMIN_ROLES;
+
+export async function requireAdmin() {
+  const session = await requireSession();
+  if (!adminRoles.has(session.user.role)) {
+    redirect("/");
+  }
+  return session;
+}
+
+export { isAdminRole } from "@/lib/roles";

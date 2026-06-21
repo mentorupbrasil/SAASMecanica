@@ -2,15 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 
-const roleLabels: Record<string, string> = {
-  OWNER: "Proprietário",
-  MANAGER: "Gerente",
-  ADVISOR: "Consultor",
-  MECHANIC: "Mecânico",
-  STOCK: "Estoque",
-  FINANCE: "Financeiro",
-  RECEPTION: "Recepção",
-};
+import { roleLabels } from "@/lib/roles";
 
 export default async function DashboardLayout({
   children,
@@ -27,6 +19,7 @@ export default async function DashboardLayout({
           name: session.user.name,
           tenantName: session.user.tenantName,
           role: roleLabels[session.user.role] ?? session.user.role,
+          roleKey: session.user.role,
         }}
       />
       <main className="flex-1 overflow-y-auto">{children}</main>

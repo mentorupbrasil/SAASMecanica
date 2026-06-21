@@ -3,21 +3,78 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Wrench } from "lucide-react";
-import { moduleGroups } from "@/config/modules";
+import { moduleGroups, adminModuleGroup } from "@/config/modules";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { UserMenu } from "@/components/layout/user-menu";
+import { isAdminRole } from "@/lib/roles";
 
 type SidebarProps = {
   user: {
     name: string;
     tenantName: string;
     role: string;
+    roleKey: string;
   };
 };
 
+function NavGroup({
+  group,
+  pathname,
+}: {
+  group: (typeof moduleGroups)[0];
+  pathname: string;
+}) {
+  return (
+    <div className="mb-6">
+      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        {group.title}
+      </p>
+      <ul className="space-y-1">
+        {group.items.map((item) => {
+          const active =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(item.href);
+          const Icon = item.icon;
+
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                  active
+                    ? "bg-orange-600 text-white"
+                    : "text-slate-300 hover:bg-slate-900 hover:text-white",
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1 truncate">{item.title}</span>
+                {item.badge && (
+                  <Badge
+                    variant="orange"
+                    className={cn(
+                      "text-[10px]",
+                      active && "bg-white/20 text-white",
+                    )}
+                  >
+                    {item.badge}
+                  </Badge>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
+  const showAdmin = isAdminRole(user.roleKey);
+  const groups = showAdmin ? [...moduleGroups, adminModuleGroup] : moduleGroups;
 
   return (
     <aside className="flex h-full w-72 flex-col border-r border-slate-200 bg-slate-950 text-slate-100">
@@ -32,49 +89,8 @@ export function Sidebar({ user }: SidebarProps) {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {moduleGroups.map((group) => (
-          <div key={group.title} className="mb-6">
-            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              {group.title}
-            </p>
-            <ul className="space-y-1">
-              {group.items.map((item) => {
-                const active =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(item.href);
-                const Icon = item.icon;
-
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                        active
-                          ? "bg-orange-600 text-white"
-                          : "text-slate-300 hover:bg-slate-900 hover:text-white",
-                      )}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1 truncate">{item.title}</span>
-                      {item.badge && (
-                        <Badge
-                          variant="orange"
-                          className={cn(
-                            "text-[10px]",
-                            active && "bg-white/20 text-white",
-                          )}
-                        >
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+        {groups.map((group) => (
+          <NavGroup key={group.title} group={group} pathname={pathname} />
         ))}
       </nav>
 

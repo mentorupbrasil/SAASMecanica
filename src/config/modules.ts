@@ -17,6 +17,7 @@ import {
   ScanLine,
   Building2,
   Kanban,
+  ShieldCheck,
 } from "lucide-react";
 
 export type ModuleItem = {
@@ -166,6 +167,24 @@ export const moduleGroups: ModuleGroup[] = [
     ],
   },
 ];
+
+export const adminModuleGroup: ModuleGroup = {
+  title: "Administração",
+  items: [
+    {
+      title: "Painel Admin",
+      href: "/admin",
+      icon: ShieldCheck,
+      description: "Configurações e controle da oficina",
+    },
+    {
+      title: "Usuários",
+      href: "/admin/usuarios",
+      icon: Users,
+      description: "Equipe, perfis e acessos",
+    },
+  ],
+};
 
 export const extraFeatures = [
   "Multi-tenant SaaS com filiais",
