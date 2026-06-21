@@ -1,20 +1,27 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Suspense } from "react";
+import { Header } from "@/components/layout/header";
+import { SearchBar } from "@/components/crud/search-bar";
+import { CustomersManager } from "@/components/modules/customers-manager";
+import { listCustomers } from "@/lib/actions/customers";
 
-export default function Page() {
+type Props = { searchParams: Promise<{ q?: string }> };
+
+export default async function ClientesPage({ searchParams }: Props) {
+  const { q } = await searchParams;
+  const customers = await listCustomers(q);
+
   return (
-    <ModulePage
-      title="Clientes"
-      description="Cadastro completo PF/PJ com histórico e CRM"
-      actions={[{ label: "Novo cliente" }]}
-      features={[
-        "CPF/CNPJ com validação",
-        "Múltiplos contatos (telefone, WhatsApp, e-mail)",
-        "Endereço completo",
-        "Veículos vinculados",
-        "Histórico de OS e orçamentos",
-        "Programa de fidelidade (pontos)",
-        "Inadimplência e limite de crédito",
-      ]}
-    />
+    <>
+      <Header
+        title="Clientes"
+        description={`${customers.length} cliente(s) cadastrado(s)`}
+      />
+      <div className="space-y-4 p-8">
+        <Suspense>
+          <SearchBar placeholder="Buscar por nome, CPF, telefone..." />
+        </Suspense>
+        <CustomersManager customers={customers} />
+      </div>
+    </>
   );
 }

@@ -1,19 +1,19 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Header } from "@/components/layout/header";
+import { ServicesManager } from "@/components/modules/services-manager";
+import { listServices } from "@/lib/actions/services";
 
-export default function Page() {
+export default async function ServicosPage() {
+  const services = await listServices();
+
   return (
-    <ModulePage
-      title="Serviços"
-      description="Catálogo de serviços com preço, tempo e garantia"
-      actions={[{ label: "Novo serviço" }]}
-      features={[
-        "Código interno e categorias",
-        "Preço de venda e custo",
-        "Tempo estimado em minutos",
-        "Garantia padrão em dias",
-        "Matriz de precificação (markup)",
-        "Serviços mais vendidos no painel",
-      ]}
-    />
+    <>
+      <Header
+        title="Serviços"
+        description={`${services.length} serviço(s) cadastrado(s)`}
+      />
+      <div className="space-y-4 p-8">
+        <ServicesManager services={services} />
+      </div>
+    </>
   );
 }

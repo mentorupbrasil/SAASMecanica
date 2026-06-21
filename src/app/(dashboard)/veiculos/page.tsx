@@ -1,20 +1,31 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Suspense } from "react";
+import { Header } from "@/components/layout/header";
+import { SearchBar } from "@/components/crud/search-bar";
+import { VehiclesManager } from "@/components/modules/vehicles-manager";
+import { listCustomersOptions } from "@/lib/actions/customers";
+import { listVehicles } from "@/lib/actions/vehicles";
 
-export default function Page() {
+type Props = { searchParams: Promise<{ q?: string }> };
+
+export default async function VeiculosPage({ searchParams }: Props) {
+  const { q } = await searchParams;
+  const [vehicles, customerOptions] = await Promise.all([
+    listVehicles(q),
+    listCustomersOptions(),
+  ]);
+
   return (
-    <ModulePage
-      title="Veículos"
-      description="Frota de clientes com histórico completo de manutenção"
-      actions={[{ label: "Novo veículo" }]}
-      features={[
-        "Placa, marca, modelo, ano, cor",
-        "Chassi, motor, Renavam",
-        "Quilometragem atual e histórico por visita",
-        "Consulta placa/VIN (integração futura)",
-        "Lembretes de revisão por km ou tempo",
-        "Todas as OS, peças trocadas e garantias",
-        "QR Code para identificação rápida na oficina",
-      ]}
-    />
+    <>
+      <Header
+        title="Veículos"
+        description={`${vehicles.length} veículo(s) cadastrado(s)`}
+      />
+      <div className="space-y-4 p-8">
+        <Suspense>
+          <SearchBar placeholder="Buscar por placa, marca, modelo, cliente..." />
+        </Suspense>
+        <VehiclesManager vehicles={vehicles} customerOptions={customerOptions} />
+      </div>
+    </>
   );
 }

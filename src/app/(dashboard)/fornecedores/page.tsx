@@ -1,19 +1,19 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Header } from "@/components/layout/header";
+import { SuppliersManager } from "@/components/modules/suppliers-manager";
+import { listSuppliers } from "@/lib/actions/suppliers";
 
-export default function Page() {
+export default async function FornecedoresPage() {
+  const suppliers = await listSuppliers();
+
   return (
-    <ModulePage
-      title="Fornecedores"
-      description="Parceiros de peças com histórico de compras e contas a pagar"
-      actions={[{ label: "Novo fornecedor" }]}
-      features={[
-        "CNPJ, contato comercial e financeiro",
-        "Peças vinculadas ao fornecedor",
-        "Histórico de entradas de estoque",
-        "Contas a pagar por fornecedor",
-        "Prazo médio de entrega",
-        "Importação XML NF-e automática",
-      ]}
-    />
+    <>
+      <Header
+        title="Fornecedores"
+        description={`${suppliers.length} fornecedor(es) cadastrado(s)`}
+      />
+      <div className="space-y-4 p-8">
+        <SuppliersManager suppliers={suppliers} />
+      </div>
+    </>
   );
 }

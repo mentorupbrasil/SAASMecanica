@@ -12,43 +12,56 @@ import { RevenueChart, ServicesChart } from "@/components/dashboard/charts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { extraFeatures } from "@/config/modules";
+import { getDashboardStats } from "@/lib/actions/dashboard";
 import { formatCurrency } from "@/lib/utils";
 
-const kpis = [
-  {
-    title: "Faturamento hoje",
-    value: formatCurrency(4280),
-    change: "+12%",
-    icon: DollarSign,
-  },
-  {
-    title: "OS abertas",
-    value: "14",
-    change: "3 aguardando peças",
-    icon: ClipboardList,
-  },
-  {
-    title: "Veículos atendidos",
-    value: "8",
-    change: "Meta: 12/dia",
-    icon: Car,
-  },
-  {
-    title: "Ticket médio",
-    value: formatCurrency(685),
-    change: "+8% vs mês anterior",
-    icon: TrendingUp,
-  },
-];
+export default async function DashboardPage() {
+  const stats = await getDashboardStats();
 
-const mechanicProductivity = [
-  { name: "Carlos", hours: 38, os: 12 },
-  { name: "Rafael", hours: 42, os: 15 },
-  { name: "João", hours: 35, os: 10 },
-  { name: "Pedro", hours: 40, os: 13 },
-];
+  const kpis = [
+    {
+      title: "Faturamento do mês",
+      value: formatCurrency(stats.monthRevenue),
+      change: `${stats.todayFinished} OS finalizada(s) hoje`,
+      icon: DollarSign,
+    },
+    {
+      title: "OS abertas",
+      value: String(stats.openOrders),
+      change: `${stats.pendingQuotes} orçamento(s) pendente(s)`,
+      icon: ClipboardList,
+    },
+    {
+      title: "Veículos atendidos hoje",
+      value: String(stats.vehiclesToday),
+      change: "Entradas na oficina",
+      icon: Car,
+    },
+    {
+      title: "Ticket médio",
+      value: formatCurrency(stats.ticketMedio),
+      change: "Média do mês",
+      icon: TrendingUp,
+    },
+  ];
 
-export default function DashboardPage() {
+  const alerts = [
+    stats.lowStockCount > 0 && {
+      text: `${stats.lowStockCount} peça(s) abaixo do estoque mínimo`,
+      variant: "warning" as const,
+    },
+    stats.pendingQuotes > 0 && {
+      text: `${stats.pendingQuotes} orçamento(s) aguardando aprovação`,
+      variant: "info" as const,
+    },
+    stats.overdueReceivables > 0 && {
+      text: `${stats.overdueReceivables} conta(s) a receber em aberto`,
+      variant: "danger" as const,
+    },
+  ].filter(Boolean) as { text: string; variant: "warning" | "info" | "danger" }[];
+
+  const maxHours = Math.max(...stats.productivity.map((m) => m.hours), 1);
+
   return (
     <>
       <Header
@@ -84,7 +97,7 @@ export default function DashboardPage() {
               <CardDescription>Receita diária consolidada</CardDescription>
             </CardHeader>
             <CardContent className="h-72">
-              <RevenueChart />
+              <RevenueChart data={stats.revenueByDay} />
             </CardContent>
           </Card>
 
@@ -94,20 +107,19 @@ export default function DashboardPage() {
               <CardDescription>Ações prioritárias</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {[
-                { text: "5 peças abaixo do estoque mínimo", variant: "warning" as const },
-                { text: "3 orçamentos aguardando aprovação", variant: "info" as const },
-                { text: "2 garantias vencem esta semana", variant: "danger" as const },
-                { text: "R$ 2.400 em contas vencidas", variant: "danger" as const },
-              ].map((alert) => (
-                <div
-                  key={alert.text}
-                  className="flex items-start justify-between gap-2 rounded-lg border border-slate-100 p-3"
-                >
-                  <p className="text-sm text-slate-700">{alert.text}</p>
-                  <Badge variant={alert.variant}>!</Badge>
-                </div>
-              ))}
+              {alerts.length === 0 ? (
+                <p className="text-sm text-slate-500">Nenhum alerta no momento</p>
+              ) : (
+                alerts.map((alert) => (
+                  <div
+                    key={alert.text}
+                    className="flex items-start justify-between gap-2 rounded-lg border border-slate-100 p-3"
+                  >
+                    <p className="text-sm text-slate-700">{alert.text}</p>
+                    <Badge variant={alert.variant}>!</Badge>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
@@ -119,38 +131,42 @@ export default function DashboardPage() {
               <CardDescription>Últimos 30 dias</CardDescription>
             </CardHeader>
             <CardContent className="h-64">
-              <ServicesChart />
+              <ServicesChart data={stats.topServices} />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle>Produtividade dos mecânicos</CardTitle>
-              <CardDescription>Horas trabalhadas e OS concluídas</CardDescription>
+              <CardDescription>Horas estimadas e OS do mês</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {mechanicProductivity.map((m) => (
-                  <div key={m.name} className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
-                      <Wrench className="h-4 w-4 text-slate-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{m.name}</p>
-                        <p className="text-xs text-slate-500">{m.os} OS</p>
+              {stats.productivity.length === 0 ? (
+                <p className="text-sm text-slate-500">Nenhum dado de produtividade</p>
+              ) : (
+                <div className="space-y-4">
+                  {stats.productivity.map((m) => (
+                    <div key={m.name} className="flex items-center gap-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+                        <Wrench className="h-4 w-4 text-slate-600" />
                       </div>
-                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full rounded-full bg-orange-500"
-                          style={{ width: `${(m.hours / 45) * 100}%` }}
-                        />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">{m.name}</p>
+                          <p className="text-xs text-slate-500">{m.os} OS</p>
+                        </div>
+                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full bg-orange-500"
+                            style={{ width: `${(m.hours / maxHours) * 100}%` }}
+                          />
+                        </div>
                       </div>
+                      <span className="text-sm font-medium text-slate-600">{m.hours}h</span>
                     </div>
-                    <span className="text-sm font-medium text-slate-600">{m.hours}h</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -189,28 +205,28 @@ export default function DashboardPage() {
               <CardTitle className="text-base">Clientes ativos</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">248</p>
-              <p className="text-sm text-slate-500">+18 este mês</p>
+              <p className="text-3xl font-bold">{stats.customers}</p>
+              <p className="text-sm text-slate-500">Cadastrados na oficina</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
               <ClipboardList className="h-5 w-5 text-orange-600" />
-              <CardTitle className="text-base">Taxa conversão orçamento</CardTitle>
+              <CardTitle className="text-base">Orçamentos pendentes</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">72%</p>
-              <p className="text-sm text-slate-500">Média mercado: 55%</p>
+              <p className="text-3xl font-bold">{stats.pendingQuotes}</p>
+              <p className="text-sm text-slate-500">Aguardando resposta</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
               <TrendingUp className="h-5 w-5 text-orange-600" />
-              <CardTitle className="text-base">Margem média OS</CardTitle>
+              <CardTitle className="text-base">OS finalizadas hoje</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">34%</p>
-              <p className="text-sm text-slate-500">Peças + mão de obra</p>
+              <p className="text-3xl font-bold">{stats.todayFinished}</p>
+              <p className="text-sm text-slate-500">Concluídas no dia</p>
             </CardContent>
           </Card>
         </div>

@@ -1,20 +1,29 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Header } from "@/components/layout/header";
+import { StockManager } from "@/components/modules/stock-manager";
+import { listProducts } from "@/lib/actions/products";
+import { listStockMovements } from "@/lib/actions/stock";
+import { listSuppliersOptions } from "@/lib/actions/suppliers";
 
-export default function Page() {
+export default async function EstoquePage() {
+  const [movements, products, supplierOptions] = await Promise.all([
+    listStockMovements(),
+    listProducts(),
+    listSuppliersOptions(),
+  ]);
+
   return (
-    <ModulePage
-      title="Controle de Estoque"
-      description="Entradas, saídas, inventário e alertas de reposição"
-      actions={[{ label: "Nova entrada" }]}
-      features={[
-        "Entrada manual ou via NF-e XML",
-        "Saída automática por OS",
-        "Inventário com contagem e ajuste",
-        "Alertas de estoque mínimo",
-        "Movimentações com rastreabilidade",
-        "Curva ABC de produtos",
-        "Transferência entre filiais",
-      ]}
-    />
+    <>
+      <Header
+        title="Controle de Estoque"
+        description={`${movements.length} movimentação(ões) recente(s)`}
+      />
+      <div className="space-y-4 p-8">
+        <StockManager
+          movements={movements}
+          products={products}
+          supplierOptions={supplierOptions}
+        />
+      </div>
+    </>
   );
 }

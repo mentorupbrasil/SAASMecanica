@@ -1,20 +1,19 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Header } from "@/components/layout/header";
+import { EmployeesManager } from "@/components/modules/employees-manager";
+import { listEmployees } from "@/lib/actions/employees";
 
-export default function Page() {
+export default async function FuncionariosPage() {
+  const employees = await listEmployees();
+
   return (
-    <ModulePage
-      title="Funcionários"
-      description="Equipe, especialidades, comissões e produtividade"
-      actions={[{ label: "Novo funcionário" }]}
-      features={[
-        "Cadastro com CPF e dados profissionais",
-        "Tipos: mecânico, consultor, gerente",
-        "Taxa de comissão configurável",
-        "Valor hora para mão de obra",
-        "Vínculo com usuário do sistema (login)",
-        "Relatório de produtividade e horas",
-        "Metas individuais de faturamento",
-      ]}
-    />
+    <>
+      <Header
+        title="Funcionários"
+        description={`${employees.length} funcionário(s) cadastrado(s)`}
+      />
+      <div className="space-y-4 p-8">
+        <EmployeesManager employees={employees} />
+      </div>
+    </>
   );
 }

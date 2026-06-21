@@ -1,20 +1,22 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Header } from "@/components/layout/header";
+import { HistorySearch } from "@/components/modules/history-search";
+import { getVehicleByPlate } from "@/lib/actions/vehicles";
 
-export default function Page() {
+type Props = { searchParams: Promise<{ plate?: string }> };
+
+export default async function HistoricoPage({ searchParams }: Props) {
+  const { plate } = await searchParams;
+  const vehicle = plate ? await getVehicleByPlate(plate) : null;
+
   return (
-    <ModulePage
-      title="Histórico do Veículo"
-      description="Linha do tempo completa de manutenções por veículo"
-      actions={[{ label: "Buscar placa" }]}
-      features={[
-        "Todas as manutenções realizadas",
-        "Quilometragem registrada em cada visita",
-        "Peças substituídas com datas",
-        "Garantias concedidas e status",
-        "Inspeções digitais anteriores",
-        "Exportação PDF para o cliente",
-        "Lembretes de próxima revisão",
-      ]}
-    />
+    <>
+      <Header
+        title="Histórico do Veículo"
+        description="Linha do tempo de manutenções por placa"
+      />
+      <div className="p-8">
+        <HistorySearch plate={plate} vehicle={vehicle} />
+      </div>
+    </>
   );
 }

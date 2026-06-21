@@ -1,19 +1,29 @@
-import { ModulePage } from "@/components/layout/module-page";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Button } from "@/components/ui/button";
+import { KanbanBoard } from "@/components/modules/kanban-board";
+import { listWorkOrdersKanban } from "@/lib/actions/work-orders";
 
-export default function Page() {
+export default async function KanbanPage() {
+  const workOrders = await listWorkOrdersKanban();
+
   return (
-    <ModulePage
-      title="Kanban de Produção"
-      description="Acompanhe todas as OS em tempo real — estilo Tekmetric/Shop-Ware"
-      actions={[{ label: "Nova OS", href: "/ordens" }]}
-      features={[
-        "Colunas por status (diagnóstico, aguardando peças, em execução...)",
-        "Drag-and-drop para mover OS entre etapas",
-        "Atribuição rápida de mecânico e box",
-        "Indicadores de tempo parado por coluna",
-        "Filtro por mecânico, prioridade e filial",
-        "Alertas visuais de SLA estourado",
-      ]}
-    />
+    <>
+      <Header
+        title="Kanban de Produção"
+        description="Acompanhe as OS em tempo real por etapa"
+        action={
+          <Link href="/ordens/nova">
+            <Button>
+              <Plus className="h-4 w-4" /> Nova OS
+            </Button>
+          </Link>
+        }
+      />
+      <div className="p-8">
+        <KanbanBoard workOrders={workOrders} />
+      </div>
+    </>
   );
 }

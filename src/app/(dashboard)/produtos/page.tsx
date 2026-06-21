@@ -1,20 +1,31 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Suspense } from "react";
+import { Header } from "@/components/layout/header";
+import { SearchBar } from "@/components/crud/search-bar";
+import { ProductsManager } from "@/components/modules/products-manager";
+import { listProducts } from "@/lib/actions/products";
+import { listSuppliersOptions } from "@/lib/actions/suppliers";
 
-export default function Page() {
+type Props = { searchParams: Promise<{ q?: string }> };
+
+export default async function ProdutosPage({ searchParams }: Props) {
+  const { q } = await searchParams;
+  const [products, supplierOptions] = await Promise.all([
+    listProducts(q),
+    listSuppliersOptions(),
+  ]);
+
   return (
-    <ModulePage
-      title="Peças e Produtos"
-      description="Catálogo de peças com estoque, preços e localização"
-      actions={[{ label: "Nova peça" }]}
-      features={[
-        "SKU, código de barras e NCM fiscal",
-        "Preço de custo e venda",
-        "Estoque atual e estoque mínimo",
-        "Localização física (prateleira)",
-        "Fornecedor padrão",
-        "Alertas de reposição automáticos",
-        "Saída automática vinculada à OS",
-      ]}
-    />
+    <>
+      <Header
+        title="Peças e Produtos"
+        description={`${products.length} produto(s) cadastrado(s)`}
+      />
+      <div className="space-y-4 p-8">
+        <Suspense>
+          <SearchBar placeholder="Buscar por nome ou SKU..." />
+        </Suspense>
+        <ProductsManager products={products} supplierOptions={supplierOptions} />
+      </div>
+    </>
   );
 }

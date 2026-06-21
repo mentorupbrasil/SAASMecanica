@@ -1,22 +1,35 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Suspense } from "react";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Button } from "@/components/ui/button";
+import { WorkOrdersList } from "@/components/modules/work-orders-list";
+import { listWorkOrders } from "@/lib/actions/work-orders";
 
-export default function Page() {
+type Props = { searchParams: Promise<{ status?: string }> };
+
+export default async function OrdensPage({ searchParams }: Props) {
+  const { status } = await searchParams;
+  const workOrders = await listWorkOrders(status);
+
   return (
-    <ModulePage
-      title="Ordens de Serviço"
-      description="Ciclo completo: abertura, diagnóstico, execução e entrega"
-      actions={[{ label: "Abrir OS" }]}
-      features={[
-        "Abertura com check-in do veículo (km, combustível, fotos)",
-        "Registro de defeitos relatados pelo cliente",
-        "Diagnóstico técnico com laudo",
-        "Serviços e peças executados com controle de margem",
-        "Controle de horas por mecânico",
-        "Fotos do veículo (entrada, progresso, saída)",
-        "Assinatura digital do cliente",
-        "Impressão PDF e envio por WhatsApp",
-        "Histórico de status com auditoria",
-      ]}
-    />
+    <>
+      <Header
+        title="Ordens de Serviço"
+        description={`${workOrders.length} ordem(ns) de serviço`}
+        action={
+          <Link href="/ordens/nova">
+            <Button>
+              <Plus className="h-4 w-4" /> Nova OS
+            </Button>
+          </Link>
+        }
+      />
+      <div className="p-8">
+        <Suspense>
+          <WorkOrdersList workOrders={workOrders} />
+        </Suspense>
+      </div>
+    </>
   );
 }

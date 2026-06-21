@@ -6,8 +6,17 @@ import { Wrench } from "lucide-react";
 import { moduleGroups } from "@/config/modules";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { UserMenu } from "@/components/layout/user-menu";
 
-export function Sidebar() {
+type SidebarProps = {
+  user: {
+    name: string;
+    tenantName: string;
+    role: string;
+  };
+};
+
+export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -69,14 +78,11 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="border-t border-slate-800 p-4">
-        <div className="rounded-lg bg-slate-900 p-3">
-          <p className="text-xs font-medium text-slate-300">Plano Professional</p>
-          <p className="mt-1 text-[11px] text-slate-500">
-            Multi-filial · WhatsApp · DVI
-          </p>
-        </div>
-      </div>
+      <UserMenu
+        name={user.name}
+        tenantName={user.tenantName}
+        role={user.role}
+      />
     </aside>
   );
 }

@@ -13,27 +13,13 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 
-const revenueData = [
-  { day: "Seg", value: 3200 },
-  { day: "Ter", value: 4100 },
-  { day: "Qua", value: 3800 },
-  { day: "Qui", value: 5200 },
-  { day: "Sex", value: 4900 },
-  { day: "Sáb", value: 2100 },
-];
+type RevenuePoint = { day: string; value: number };
+type ServicePoint = { service: string; qty: number };
 
-const servicesData = [
-  { service: "Revisão", qty: 42 },
-  { service: "Freios", qty: 28 },
-  { service: "Suspensão", qty: 19 },
-  { service: "Alinhamento", qty: 35 },
-  { service: "Elétrica", qty: 12 },
-];
-
-export function RevenueChart() {
+export function RevenueChart({ data }: { data: RevenuePoint[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={revenueData}>
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="day" stroke="#64748b" fontSize={12} />
         <YAxis stroke="#64748b" fontSize={12} />
@@ -50,10 +36,10 @@ export function RevenueChart() {
   );
 }
 
-export function ServicesChart() {
+export function ServicesChart({ data }: { data: ServicePoint[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={servicesData}>
+      <BarChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="service" stroke="#64748b" fontSize={12} />
         <YAxis stroke="#64748b" fontSize={12} />

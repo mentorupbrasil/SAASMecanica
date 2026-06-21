@@ -41,17 +41,32 @@ SaaS completo para gestão de oficinas mecânicas — inspirado nos melhores sis
 # Instalar dependências
 npm install
 
-# Gerar client Prisma
-npm run db:generate
+# Configurar .env (copie .env.example e cole a connection string do Neon)
+# DATABASE_URL=postgresql://...@...neon.tech/neondb?sslmode=require
+# AUTH_SECRET=... (openssl rand -base64 32)
 
-# Subir banco (Prisma Postgres local ou configure DATABASE_URL)
+# Gerar client Prisma + sincronizar banco Neon
+npm run db:generate
 npm run db:push
+
+# Popular dados demo
+npm run db:seed
 
 # Desenvolvimento
 npm run dev
 ```
 
 Acesse [http://localhost:3000](http://localhost:3000)
+
+### Login demo (após seed)
+
+| Campo | Valor |
+|-------|-------|
+| Identificador | `demo` |
+| E-mail | `admin@demo.com` |
+| Senha | `demo1234` |
+
+Ou crie sua oficina em `/register`.
 
 ## Estrutura
 

@@ -1,20 +1,37 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Header } from "@/components/layout/header";
+import { AgendaManager } from "@/components/modules/agenda-manager";
+import { listCustomersOptions } from "@/lib/actions/customers";
+import { listMechanicsOptions } from "@/lib/actions/employees";
+import {
+  listAppointments,
+  listServiceBays,
+} from "@/lib/actions/appointments";
+import { listVehiclesOptions } from "@/lib/actions/vehicles";
 
-export default function Page() {
+export default async function AgendaPage() {
+  const [appointments, customers, vehicles, employees, serviceBays] = await Promise.all([
+    listAppointments(),
+    listCustomersOptions(),
+    listVehiclesOptions(),
+    listMechanicsOptions(),
+    listServiceBays(),
+  ]);
+
   return (
-    <ModulePage
-      title="Agenda"
-      description="Agendamentos, boxes/elevadores e escala dos mecânicos"
-      actions={[{ label: "Novo agendamento" }]}
-      features={[
-        "Calendário diário, semanal e mensal",
-        "Controle de boxes e elevadores",
-        "Agenda individual por mecânico",
-        "Confirmação automática por WhatsApp",
-        "Status: agendado, confirmado, no-show",
-        "Conversão de agendamento em OS",
-        "Bloqueio de horários e feriados",
-      ]}
-    />
+    <>
+      <Header
+        title="Agenda"
+        description={`${appointments.length} agendamento(s)`}
+      />
+      <div className="p-8">
+        <AgendaManager
+          appointments={appointments}
+          customers={customers}
+          vehicles={vehicles}
+          employees={employees}
+          serviceBays={serviceBays}
+        />
+      </div>
+    </>
   );
 }

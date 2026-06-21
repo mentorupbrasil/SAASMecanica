@@ -1,19 +1,25 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Header } from "@/components/layout/header";
+import { WarrantiesManager } from "@/components/modules/warranties-manager";
+import {
+  listWarranties,
+  listWorkOrdersForWarranty,
+} from "@/lib/actions/warranties";
 
-export default function Page() {
+export default async function GarantiasPage() {
+  const [warranties, workOrders] = await Promise.all([
+    listWarranties(),
+    listWorkOrdersForWarranty(),
+  ]);
+
   return (
-    <ModulePage
-      title="Garantias"
-      description="Garantia de peças e serviços com controle de vencimentos"
-      actions={[{ label: "Registrar garantia" }]}
-      features={[
-        "Garantia de peça ou serviço",
-        "Prazo por dias ou quilometragem",
-        "Alertas de vencimento",
-        "Acionamento de garantia pelo cliente",
-        "Histórico de acionamentos",
-        "Vinculação automática à OS de origem",
-      ]}
-    />
+    <>
+      <Header
+        title="Garantias"
+        description={`${warranties.length} garantia(s) registrada(s)`}
+      />
+      <div className="p-8">
+        <WarrantiesManager warranties={warranties} workOrders={workOrders} />
+      </div>
+    </>
   );
 }
