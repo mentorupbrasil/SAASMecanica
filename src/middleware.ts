@@ -1,40 +1,26 @@
-import { getToken } from "next-auth/jwt";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth.config";
 
-export async function middleware(req: NextRequest) {
+export default NextAuth(authConfig).auth((req) => {
+  const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
-
-  if (
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/aprovacao") ||
-    pathname.startsWith("/_next") ||
-    pathname.includes(".")
-  ) {
-    return NextResponse.next();
-  }
-
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-  });
 
   const isAuthPage =
     pathname.startsWith("/login") || pathname.startsWith("/register");
 
-  if (!token && !isAuthPage) {
-    const loginUrl = new URL("/login", req.url);
+  if (!isLoggedIn && !isAuthPage) {
+    const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    return Response.redirect(loginUrl);
   }
 
-  if (token && isAuthPage) {
-    return NextResponse.redirect(new URL("/", req.url));
+  if (isLoggedIn && isAuthPage) {
+    return Response.redirect(new URL("/", req.nextUrl.origin));
   }
 
-  return NextResponse.next();
-}
+  return undefined;
+});
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|aprovacao).*)"],
 };

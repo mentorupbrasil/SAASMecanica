@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 
 type UserRole =
@@ -34,16 +35,6 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: UserRole;
-    tenantId: string;
-    tenantName: string;
-    tenantSlug: string;
-  }
-}
-
 const loginSchema = z.object({
   slug: z.string().min(2),
   email: z.string().email(),
@@ -51,13 +42,7 @@ const loginSchema = z.object({
 });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  trustHost: true,
-  secret: process.env.AUTH_SECRET,
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
+  ...authConfig,
   providers: [
     Credentials({
       name: "credentials",
@@ -113,24 +98,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id!;
-        token.role = user.role;
-        token.tenantId = user.tenantId;
-        token.tenantName = user.tenantName;
-        token.tenantSlug = user.tenantSlug;
-      }
-      return token;
-    },
-    session({ session, token }) {
-      session.user.id = token.id;
-      session.user.role = token.role;
-      session.user.tenantId = token.tenantId;
-      session.user.tenantName = token.tenantName;
-      session.user.tenantSlug = token.tenantSlug;
-      return session;
-    },
-  },
 });
