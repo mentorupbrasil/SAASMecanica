@@ -197,6 +197,8 @@ export async function getQuoteByToken(token: string) {
     },
   });
 }
+
+export async function convertQuoteToWorkOrder(quoteId: string) {
   const tenantId = await requireTenantId();
   const quote = await prisma.quote.findFirst({
     where: { id: quoteId, tenantId },
