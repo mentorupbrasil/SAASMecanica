@@ -1,46 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useActionState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Wrench } from "lucide-react";
+import { loginUser, type LoginState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
+const initialState: LoginState = {};
+
+const authErrors: Record<string, string> = {
+  Configuration: "Erro de configuração no servidor. Verifique AUTH_SECRET e AUTH_URL na Vercel.",
+  CredentialsSignin: "Identificador, e-mail ou senha incorretos",
+  Default: "Não foi possível entrar. Tente novamente.",
+};
+
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
   const registered = searchParams.get("registered") === "1";
+  const urlError = searchParams.get("error");
+  const [state, formAction, pending] = useActionState(loginUser, initialState);
 
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const form = new FormData(e.currentTarget);
-
-    const result = await signIn("credentials", {
-      slug: String(form.get("slug")),
-      email: String(form.get("email")),
-      password: String(form.get("password")),
-      redirect: false,
-    });
-
-    setLoading(false);
-
-    if (result?.error) {
-      setError("Oficina, e-mail ou senha incorretos");
-      return;
-    }
-
-    router.push(callbackUrl);
-    router.refresh();
-  }
+  const errorMessage =
+    state.error ??
+    (urlError ? authErrors[urlError] ?? authErrors.Default : null);
 
   return (
     <div className="w-full max-w-md">
@@ -60,13 +45,16 @@ export function LoginForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <form action={formAction} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
+
         <div className="space-y-2">
           <Label htmlFor="slug">Identificador da oficina</Label>
           <Input
             id="slug"
             name="slug"
-            placeholder="ex: minha-oficina"
+            defaultValue={searchParams.get("slug") ?? ""}
+            placeholder="ex: admin"
             required
             autoComplete="organization"
           />
@@ -97,12 +85,12 @@ export function LoginForm() {
           />
         </div>
 
-        {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        {errorMessage && (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
         )}
 
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Entrando..." : "Entrar"}
+        <Button type="submit" className="w-full" disabled={pending}>
+          {pending ? "Entrando..." : "Entrar"}
         </Button>
       </form>
 

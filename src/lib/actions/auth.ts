@@ -1,7 +1,9 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { AuthError } from "next-auth";
 import { z } from "zod";
+import { signIn } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 const registerSchema = z.object({
@@ -21,6 +23,54 @@ export type RegisterState = {
   success?: boolean;
   slug?: string;
 };
+
+export type LoginState = {
+  error?: string;
+};
+
+const loginSchema = z.object({
+  slug: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+export async function loginUser(
+  _prev: LoginState,
+  formData: FormData,
+): Promise<LoginState> {
+  if (!process.env.AUTH_SECRET) {
+    return { error: "AUTH_SECRET não configurado no servidor. Contate o suporte." };
+  }
+
+  const parsed = loginSchema.safeParse({
+    slug: String(formData.get("slug") ?? ""),
+    email: String(formData.get("email") ?? ""),
+    password: String(formData.get("password") ?? ""),
+  });
+
+  if (!parsed.success) {
+    return { error: "Preencha todos os campos corretamente" };
+  }
+
+  const callbackUrl = String(formData.get("callbackUrl") ?? "/");
+
+  try {
+    await signIn("credentials", {
+      ...parsed.data,
+      redirectTo: callbackUrl,
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      if (error.type === "CredentialsSignin") {
+        return { error: "Identificador, e-mail ou senha incorretos" };
+      }
+      return { error: "Erro de autenticação. Verifique AUTH_SECRET e AUTH_URL na Vercel." };
+    }
+    throw error;
+  }
+
+  return {};
+}
 
 function slugify(value: string) {
   return value

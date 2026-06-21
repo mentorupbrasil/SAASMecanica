@@ -52,9 +52,11 @@ const loginSchema = z.object({
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
+  secret: process.env.AUTH_SECRET,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
+    error: "/login",
   },
   providers: [
     Credentials({
@@ -65,44 +67,49 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Senha", type: "password" },
       },
       authorize: async (credentials) => {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
+        try {
+          const parsed = loginSchema.safeParse(credentials);
+          if (!parsed.success) return null;
 
-        const { slug, email, password } = parsed.data;
+          const { slug, email, password } = parsed.data;
 
-        const tenant = await prisma.tenant.findUnique({
-          where: { slug: slug.toLowerCase().trim() },
-        });
-        if (!tenant || !tenant.active) return null;
+          const tenant = await prisma.tenant.findUnique({
+            where: { slug: slug.toLowerCase().trim() },
+          });
+          if (!tenant || !tenant.active) return null;
 
-        const user = await prisma.user.findUnique({
-          where: {
-            tenantId_email: {
-              tenantId: tenant.id,
-              email: email.toLowerCase().trim(),
+          const user = await prisma.user.findUnique({
+            where: {
+              tenantId_email: {
+                tenantId: tenant.id,
+                email: email.toLowerCase().trim(),
+              },
             },
-          },
-        });
+          });
 
-        if (!user || !user.active) return null;
+          if (!user || !user.active) return null;
 
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
+          const valid = await bcrypt.compare(password, user.passwordHash);
+          if (!valid) return null;
 
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date() },
-        });
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() },
+          });
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          tenantId: tenant.id,
-          tenantName: tenant.name,
-          tenantSlug: tenant.slug,
-        };
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            tenantId: tenant.id,
+            tenantName: tenant.name,
+            tenantSlug: tenant.slug,
+          };
+        } catch (error) {
+          console.error("[auth] authorize failed:", error);
+          return null;
+        }
       },
     }),
   ],
