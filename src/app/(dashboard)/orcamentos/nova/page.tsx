@@ -16,7 +16,7 @@ export default async function NovoOrcamentoPage() {
     <>
       <Header
         title="Novo orçamento"
-        description="Montar proposta comercial para o cliente"
+        description="Use quando o cliente ainda não deixou o carro ou quer aprovar antes"
         action={
           <Link href="/orcamentos">
             <Button variant="outline">

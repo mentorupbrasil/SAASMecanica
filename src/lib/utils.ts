@@ -29,3 +29,26 @@ export function formatDocument(doc: string) {
 export function formatPlate(plate: string) {
   return plate.toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
+
+export function whatsappLink(phone: string, message: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return null;
+  const num = digits.startsWith("55") ? digits : `55${digits}`;
+  return `https://wa.me/${num}?text=${encodeURIComponent(message)}`;
+}
+
+export function statusLabel(status: string) {
+  const labels: Record<string, string> = {
+    OPEN: "Aberta",
+    DIAGNOSIS: "Diagnóstico",
+    WAITING_APPROVAL: "Aguard. aprovação",
+    WAITING_PARTS: "Aguard. peças",
+    IN_PROGRESS: "Em execução",
+    QUALITY_CHECK: "Controle qualidade",
+    FINISHED: "Finalizada",
+    DELIVERED: "Entregue",
+    CANCELLED: "Cancelada",
+    DRAFT: "Rascunho",
+  };
+  return labels[status] ?? status;
+}

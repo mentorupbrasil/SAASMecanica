@@ -82,6 +82,15 @@ export async function createTenantUser(formData: FormData) {
   }
 
   const { name, email, password, role, phone } = parsed.data;
+  const normalizedEmail = email.toLowerCase();
+
+  const existing = await prisma.user.findFirst({
+    where: { email: normalizedEmail },
+  });
+  if (existing) {
+    throw new Error("Este e-mail já está em uso no sistema.");
+  }
+
   const passwordHash = await bcrypt.hash(password, 12);
 
   await prisma.user.create({

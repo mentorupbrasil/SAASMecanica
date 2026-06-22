@@ -1,5 +1,5 @@
-import { Bell, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GlobalSearch } from "@/components/layout/global-search";
+import { NotificationBell } from "@/components/layout/notification-bell";
 
 type HeaderProps = {
   title: string;
@@ -9,25 +9,20 @@ type HeaderProps = {
 
 export function Header({ title, description, action }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-      <div className="flex items-center justify-between gap-4 px-8 py-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+    <header className="glass-header sticky top-0 z-10">
+      <div className="flex items-center justify-between gap-6 px-8 py-4">
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold tracking-tight text-slate-900 lg:text-2xl">
             {title}
           </h1>
           {description && (
-            <p className="mt-1 text-sm text-slate-500">{description}</p>
+            <p className="mt-0.5 truncate text-sm text-slate-500">{description}</p>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
-            <Search className="h-4 w-4 text-slate-400" />
-            <span className="text-sm text-slate-400">Buscar OS, placa, cliente...</span>
-          </div>
-          <Button variant="outline" size="icon">
-            <Bell className="h-4 w-4" />
-          </Button>
+        <div className="flex shrink-0 items-center gap-2.5">
+          <GlobalSearch />
+          <NotificationBell />
           {action}
         </div>
       </div>

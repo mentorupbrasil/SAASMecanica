@@ -1,109 +1,127 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Wrench } from "lucide-react";
+import { Building2, User, Mail, Lock, ArrowRight } from "lucide-react";
 import { registerWorkshop, type RegisterState } from "@/lib/actions/auth";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
 const initialState: RegisterState = {};
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 30);
-}
-
 export function RegisterForm() {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(registerWorkshop, initialState);
-  const [slug, setSlug] = useState("");
-  const [slugTouched, setSlugTouched] = useState(false);
 
   useEffect(() => {
-    if (state.success && state.slug) {
-      router.push(`/login?registered=1&slug=${state.slug}`);
+    if (state.success && state.workshopName) {
+      const params = new URLSearchParams({
+        registered: "1",
+        workshop: state.workshopName,
+      });
+      router.push(`/login?${params.toString()}`);
     }
-  }, [state.success, state.slug, router]);
+  }, [state.success, state.workshopName, router]);
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-600">
-          <Wrench className="h-6 w-6 text-white" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Criar oficina</h1>
-          <p className="text-sm text-slate-500">Comece seu teste gratuito</p>
-        </div>
-      </div>
-
-      <form action={formAction} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <AuthShell
+      title="Crie sua oficina"
+      subtitle="Configure em minutos — teste grátis, sem cartão"
+      footer={
+        <>
+          Já tem conta?{" "}
+          <Link href="/login" className="font-semibold text-orange-600 hover:underline">
+            Fazer login
+          </Link>
+        </>
+      }
+    >
+      <form action={formAction} className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="workshopName">Nome da oficina</Label>
-          <Input
-            id="workshopName"
-            name="workshopName"
-            placeholder="Oficina Silva Motors"
-            required
-            onChange={(e) => {
-              if (!slugTouched) setSlug(slugify(e.target.value));
-            }}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="slug">Identificador (URL de login)</Label>
-          <Input
-            id="slug"
-            name="slug"
-            value={slug}
-            onChange={(e) => {
-              setSlugTouched(true);
-              setSlug(slugify(e.target.value));
-            }}
-            placeholder="silva-motors"
-            required
-          />
-          <p className="text-xs text-slate-400">Usado no login — ex: silva-motors</p>
+          <div className="relative">
+            <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              id="workshopName"
+              name="workshopName"
+              className="pl-10"
+              placeholder="Ex: Oficina Silva Motors"
+              required
+              autoFocus
+            />
+          </div>
+          <p className="text-xs text-slate-400">
+            Cada oficina é isolada — seus dados ficam separados das demais.
+          </p>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="ownerName">Seu nome</Label>
-          <Input id="ownerName" name="ownerName" placeholder="João Silva" required />
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              id="ownerName"
+              name="ownerName"
+              className="pl-10"
+              placeholder="João Silva"
+              required
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">E-mail</Label>
-          <Input id="email" name="email" type="email" placeholder="voce@oficina.com" required />
+          <Label htmlFor="email">E-mail de acesso</Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              className="pl-10"
+              placeholder="voce@oficina.com"
+              required
+              autoComplete="email"
+            />
+          </div>
+          <p className="text-xs text-slate-400">Será usado para entrar no sistema.</p>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="password">Senha</Label>
-          <Input id="password" name="password" type="password" placeholder="Mínimo 6 caracteres" required />
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              className="pl-10"
+              placeholder="Mínimo 6 caracteres"
+              required
+              minLength={6}
+              autoComplete="new-password"
+            />
+          </div>
         </div>
 
         {state.error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</p>
+          <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{state.error}</p>
         )}
 
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Criando..." : "Criar oficina"}
+        <Button type="submit" className="h-11 w-full text-base" disabled={pending}>
+          {pending ? "Criando oficina..." : (
+            <>
+              Criar minha oficina
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </Button>
-      </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
-        Já tem conta?{" "}
-        <Link href="/login" className="font-medium text-orange-600 hover:underline">
-          Fazer login
-        </Link>
-      </p>
-    </div>
+        <p className="text-center text-xs text-slate-400">
+          Ao criar, você será o administrador da oficina e poderá convidar sua equipe depois.
+        </p>
+      </form>
+    </AuthShell>
   );
 }

@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wrench } from "lucide-react";
+import { Plus, Sparkles, Wrench } from "lucide-react";
 import { moduleGroups, adminModuleGroup } from "@/config/modules";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { UserMenu } from "@/components/layout/user-menu";
 import { isAdminRole } from "@/lib/roles";
 
@@ -26,11 +25,11 @@ function NavGroup({
   pathname: string;
 }) {
   return (
-    <div className="mb-6">
-      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+    <div className="mb-5">
+      <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
         {group.title}
       </p>
-      <ul className="space-y-1">
+      <ul className="space-y-0.5">
         {group.items.map((item) => {
           const active =
             item.href === "/"
@@ -43,24 +42,37 @@ function NavGroup({
               <Link
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                  "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200",
                   active
-                    ? "bg-orange-600 text-white"
-                    : "text-slate-300 hover:bg-slate-900 hover:text-white",
+                    ? "bg-[var(--sidebar-active)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                    : "text-slate-400 hover:bg-[var(--sidebar-hover)] hover:text-slate-200",
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0" />
+                {active && (
+                  <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-orange-500" />
+                )}
+                <span
+                  className={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+                    active
+                      ? "bg-orange-500/20 text-orange-400"
+                      : "bg-white/[0.04] text-slate-500 group-hover:bg-white/[0.08] group-hover:text-slate-300",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
                 <span className="flex-1 truncate">{item.title}</span>
                 {item.badge && (
-                  <Badge
-                    variant="orange"
+                  <span
                     className={cn(
-                      "text-[10px]",
-                      active && "bg-white/20 text-white",
+                      "rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide",
+                      active
+                        ? "bg-orange-500/25 text-orange-300"
+                        : "bg-orange-500/15 text-orange-400/90",
                     )}
                   >
                     {item.badge}
-                  </Badge>
+                  </span>
                 )}
               </Link>
             </li>
@@ -77,28 +89,45 @@ export function Sidebar({ user }: SidebarProps) {
   const groups = showAdmin ? [...moduleGroups, adminModuleGroup] : moduleGroups;
 
   return (
-    <aside className="flex h-full w-72 flex-col border-r border-slate-200 bg-slate-950 text-slate-100">
-      <div className="flex items-center gap-3 border-b border-slate-800 px-5 py-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600">
-          <Wrench className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold">SAASMecanica</p>
-          <p className="text-xs text-slate-400">Gestão de Oficina</p>
+    <aside className="dark-scroll flex h-full w-[280px] shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar)]">
+      {/* Brand */}
+      <div className="relative overflow-hidden border-b border-[var(--sidebar-border)] px-5 py-5">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(234,88,12,0.15),transparent_60%)]" />
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/25">
+            <Wrench className="h-5 w-5 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold tracking-tight text-white">
+              {user.tenantName}
+            </p>
+            <p className="flex items-center gap-1 text-[11px] text-slate-500">
+              <Sparkles className="h-3 w-3 text-orange-400/80" />
+              SAASMecanica
+            </p>
+          </div>
         </div>
       </div>
 
+      {/* Quick action */}
+      <div className="border-b border-[var(--sidebar-border)] p-4">
+        <Link
+          href="/ordens/nova"
+          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition-all hover:from-orange-400 hover:to-orange-500 hover:shadow-orange-500/30 active:scale-[0.98]"
+        >
+          <Plus className="h-4 w-4" />
+          Nova OS — entrada
+        </Link>
+      </div>
+
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         {groups.map((group) => (
           <NavGroup key={group.title} group={group} pathname={pathname} />
         ))}
       </nav>
 
-      <UserMenu
-        name={user.name}
-        tenantName={user.tenantName}
-        role={user.role}
-      />
+      <UserMenu name={user.name} tenantName={user.tenantName} role={user.role} />
     </aside>
   );
 }

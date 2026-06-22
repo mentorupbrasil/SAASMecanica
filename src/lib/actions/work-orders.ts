@@ -64,7 +64,12 @@ export async function listWorkOrdersKanban() {
       assignedMechanic: { select: { name: true } },
     },
     orderBy: { openedAt: "desc" },
-  });
+  }).then((rows) =>
+    rows.map((r) => ({
+      ...r,
+      total: Number(r.total),
+    })),
+  );
 }
 
 export async function getWorkOrder(id: string) {

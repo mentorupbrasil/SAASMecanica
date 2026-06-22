@@ -49,3 +49,20 @@ export function ServicesChart({ data }: { data: ServicePoint[] }) {
     </ResponsiveContainer>
   );
 }
+
+type TrendPoint = { month: string; income: number; expense: number; profit: number };
+
+export function ProfitTrendChart({ data }: { data: TrendPoint[] }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <XAxis dataKey="month" stroke="#64748b" fontSize={11} />
+        <YAxis stroke="#64748b" fontSize={12} />
+        <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+        <Bar dataKey="income" name="Receita" fill="#10b981" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="expense" name="Despesa" fill="#ef4444" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}

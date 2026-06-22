@@ -18,7 +18,7 @@ export default async function NovaOrdemPage() {
     <>
       <Header
         title="Nova ordem de serviço"
-        description="Abrir OS com check-in do veículo"
+        description="Entrada do veículo — use quando o cliente chegou na oficina"
         action={
           <Link href="/ordens">
             <Button variant="outline">

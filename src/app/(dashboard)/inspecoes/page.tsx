@@ -1,20 +1,24 @@
-import { ModulePage } from "@/components/layout/module-page";
+import { Header } from "@/components/layout/header";
+import { InspectionManager } from "@/components/modules/inspection-manager";
+import { listInspections } from "@/lib/actions/inspections";
+import { listVehiclesOptions } from "@/lib/actions/vehicles";
 
-export default function Page() {
+export default async function InspecoesPage() {
+  const [inspections, vehicles] = await Promise.all([
+    listInspections(),
+    listVehiclesOptions(),
+  ]);
+
   return (
-    <ModulePage
-      title="Inspeção Digital (DVI)"
-      description="Checklist multiponto com fotos — padrão Shop-Ware/Tekmetric"
-      actions={[{ label: "Nova inspeção" }]}
-      features={[
-        "Templates de checklist por tipo de veículo",
-        "Itens: OK, Atenção, Crítico, N/A",
-        "Foto e vídeo por item inspecionado",
-        "Relatório visual para o cliente aprovar serviços",
-        "Vinculação automática à OS",
-        "Histórico de inspeções por veículo",
-        "Aumento de taxa de aprovação de serviços adicionais",
-      ]}
-    />
+    <>
+      <Header
+        title="Inspeção Digital (DVI)"
+        description="Checklist multiponto com OK, Atenção e Crítico"
+        action={null}
+      />
+      <div className="p-8">
+        <InspectionManager inspections={inspections} vehicles={vehicles} />
+      </div>
+    </>
   );
 }

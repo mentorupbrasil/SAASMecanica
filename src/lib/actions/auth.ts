@@ -5,14 +5,10 @@ import { AuthError } from "next-auth";
 import { z } from "zod";
 import { signIn } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { slugify, uniqueSlug } from "@/lib/slug";
 
 const registerSchema = z.object({
   workshopName: z.string().min(3, "Nome da oficina muito curto"),
-  slug: z
-    .string()
-    .min(3, "Identificador muito curto")
-    .max(30)
-    .regex(/^[a-z0-9-]+$/, "Use apenas letras minúsculas, números e hífen"),
   ownerName: z.string().min(3, "Nome inválido"),
   email: z.string().email("E-mail inválido"),
   password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
@@ -21,7 +17,7 @@ const registerSchema = z.object({
 export type RegisterState = {
   error?: string;
   success?: boolean;
-  slug?: string;
+  workshopName?: string;
 };
 
 export type LoginState = {
@@ -29,7 +25,6 @@ export type LoginState = {
 };
 
 const loginSchema = z.object({
-  slug: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6),
 });
@@ -43,13 +38,12 @@ export async function loginUser(
   }
 
   const parsed = loginSchema.safeParse({
-    slug: String(formData.get("slug") ?? ""),
     email: String(formData.get("email") ?? ""),
     password: String(formData.get("password") ?? ""),
   });
 
   if (!parsed.success) {
-    return { error: "Preencha todos os campos corretamente" };
+    return { error: "Informe e-mail e senha válidos" };
   }
 
   const callbackUrl = String(formData.get("callbackUrl") ?? "/");
@@ -62,9 +56,9 @@ export async function loginUser(
   } catch (error) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
-        return { error: "Identificador, e-mail ou senha incorretos" };
+        return { error: "E-mail ou senha incorretos" };
       }
-      return { error: "Erro de autenticação. Verifique AUTH_SECRET e AUTH_URL na Vercel." };
+      return { error: "Erro de autenticação. Tente novamente em instantes." };
     }
     throw error;
   }
@@ -72,25 +66,14 @@ export async function loginUser(
   return {};
 }
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 30);
-}
-
 export async function registerWorkshop(
   _prev: RegisterState,
   formData: FormData,
 ): Promise<RegisterState> {
   const raw = {
-    workshopName: String(formData.get("workshopName") ?? ""),
-    slug: String(formData.get("slug") ?? "") || slugify(String(formData.get("workshopName") ?? "")),
-    ownerName: String(formData.get("ownerName") ?? ""),
-    email: String(formData.get("email") ?? ""),
+    workshopName: String(formData.get("workshopName") ?? "").trim(),
+    ownerName: String(formData.get("ownerName") ?? "").trim(),
+    email: String(formData.get("email") ?? "").trim().toLowerCase(),
     password: String(formData.get("password") ?? ""),
   };
 
@@ -99,12 +82,19 @@ export async function registerWorkshop(
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
   }
 
-  const { workshopName, slug, ownerName, email, password } = parsed.data;
+  const { workshopName, ownerName, email, password } = parsed.data;
 
-  const existingTenant = await prisma.tenant.findUnique({ where: { slug } });
-  if (existingTenant) {
-    return { error: "Este identificador de oficina já está em uso" };
+  const existingUser = await prisma.user.findFirst({
+    where: { email: email.toLowerCase() },
+  });
+  if (existingUser) {
+    return { error: "Este e-mail já está cadastrado. Faça login ou use outro e-mail." };
   }
+
+  const slug = await uniqueSlug(workshopName, async (s) => {
+    const t = await prisma.tenant.findUnique({ where: { slug: s } });
+    return !!t;
+  });
 
   const passwordHash = await bcrypt.hash(password, 12);
 
@@ -138,7 +128,7 @@ export async function registerWorkshop(
       });
     });
 
-    return { success: true, slug };
+    return { success: true, workshopName };
   } catch {
     return { error: "Não foi possível criar a oficina. Tente novamente." };
   }

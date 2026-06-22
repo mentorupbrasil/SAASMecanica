@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Plus, X } from "lucide-react";
+import { Check, Plus, X, CalendarDays, List } from "lucide-react";
 import {
   createAppointment,
   updateAppointmentStatus,
 } from "@/lib/actions/appointments";
+import { AgendaCalendar } from "@/components/modules/agenda-calendar";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -67,6 +68,7 @@ export function AgendaManager({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<"calendar" | "list">("calendar");
   const [customerId, setCustomerId] = useState("");
   const [pending, startTransition] = useTransition();
 
@@ -86,12 +88,31 @@ export function AgendaManager({
 
   return (
     <>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex rounded-lg border border-slate-200 p-1">
+          <Button
+            variant={view === "calendar" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setView("calendar")}
+          >
+            <CalendarDays className="h-4 w-4" /> Semana
+          </Button>
+          <Button
+            variant={view === "list" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setView("list")}
+          >
+            <List className="h-4 w-4" /> Lista
+          </Button>
+        </div>
         <Button onClick={() => setOpen(true)}>
           <Plus className="h-4 w-4" /> Novo agendamento
         </Button>
       </div>
 
+      {view === "calendar" ? (
+        <AgendaCalendar appointments={appointments} />
+      ) : (
       <DataTable>
         <Table>
           <THead>
@@ -172,6 +193,7 @@ export function AgendaManager({
           </TBody>
         </Table>
       </DataTable>
+      )}
 
       <Modal open={open} onClose={() => setOpen(false)} title="Novo agendamento" wide>
         <form onSubmit={handleSubmit} className="space-y-4">
