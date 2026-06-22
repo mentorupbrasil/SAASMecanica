@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getDashboardStats } from "@/lib/actions/dashboard";
+import { TEAM_PRODUCTIVITY_TITLE } from "@/lib/workshop-labels";
 import { formatCurrency } from "@/lib/utils";
 
 export default async function DashboardPage() {
@@ -165,7 +166,7 @@ export default async function DashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Produtividade dos mecânicos</CardTitle>
+              <CardTitle>{TEAM_PRODUCTIVITY_TITLE}</CardTitle>
               <CardDescription>Horas estimadas e OS do mês</CardDescription>
             </CardHeader>
             <CardContent>

@@ -47,7 +47,7 @@ export function RegisterForm() {
               id="workshopName"
               name="workshopName"
               className="pl-10"
-              placeholder="Ex: Oficina Silva Motors"
+              placeholder="Ex: Eletromecânica Silva Motors"
               required
               autoFocus
             />

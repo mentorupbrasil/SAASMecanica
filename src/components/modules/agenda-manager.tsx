@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { TECHNICIAN_COLUMN, TECHNICIAN_LABEL } from "@/lib/workshop-labels";
 import { Modal } from "@/components/crud/modal";
 import {
   DataTable,
@@ -121,7 +122,7 @@ export function AgendaManager({
               <TH>Título</TH>
               <TH>Cliente</TH>
               <TH>Veículo</TH>
-              <TH>Mecânico</TH>
+              <TH>{TECHNICIAN_COLUMN}</TH>
               <TH>Box</TH>
               <TH>Status</TH>
               <TH className="w-32">Ações</TH>
@@ -236,7 +237,7 @@ export function AgendaManager({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Mecânico</Label>
+              <Label>{TECHNICIAN_LABEL}</Label>
               <Select name="employeeId">
                 <option value="">Nenhum</option>
                 {employees.map((e) => (

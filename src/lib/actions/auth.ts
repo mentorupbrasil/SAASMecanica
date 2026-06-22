@@ -70,6 +70,14 @@ export async function registerWorkshop(
   _prev: RegisterState,
   formData: FormData,
 ): Promise<RegisterState> {
+  const { isPublicRegistrationEnabled } = await import("@/lib/super-admin");
+  if (!isPublicRegistrationEnabled()) {
+    return {
+      error:
+        "Cadastro público desativado. Peça ao administrador da plataforma para liberar sua oficina.",
+    };
+  }
+
   const raw = {
     workshopName: String(formData.get("workshopName") ?? "").trim(),
     ownerName: String(formData.get("ownerName") ?? "").trim(),

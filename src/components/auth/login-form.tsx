@@ -14,10 +14,12 @@ const initialState: LoginState = {};
 const authErrors: Record<string, string> = {
   Configuration: "Erro de configuração no servidor. Contate o suporte.",
   CredentialsSignin: "E-mail ou senha incorretos",
+  RegistrationDisabled:
+    "Cadastro público desativado. Peça ao administrador da plataforma para liberar sua empresa.",
   Default: "Não foi possível entrar. Tente novamente.",
 };
 
-export function LoginForm() {
+export function LoginForm({ allowRegistration = false }: { allowRegistration?: boolean }) {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
   const registered = searchParams.get("registered") === "1";
@@ -26,19 +28,28 @@ export function LoginForm() {
   const [state, formAction, pending] = useActionState(loginUser, initialState);
 
   const errorMessage =
-    state.error ?? (urlError ? authErrors[urlError] ?? authErrors.Default : null);
+    state.error ??
+    (urlError === "RegistrationDisabled"
+      ? authErrors.RegistrationDisabled
+      : urlError
+        ? authErrors[urlError] ?? authErrors.Default
+        : null);
 
   return (
     <AuthShell
       title="Bem-vindo de volta"
-      subtitle="Acesse o painel da sua oficina"
+      subtitle="Acesse o painel da sua empresa — o sistema identifica sua oficina pelo e-mail"
       footer={
-        <>
-          Ainda não tem conta?{" "}
-          <Link href="/register" className="font-semibold text-orange-600 hover:underline">
-            Criar minha oficina
-          </Link>
-        </>
+        allowRegistration ? (
+          <>
+            Ainda não tem conta?{" "}
+            <Link href="/register" className="font-semibold text-orange-600 hover:underline">
+              Criar minha oficina
+            </Link>
+          </>
+        ) : (
+          <>Acesso liberado pelo administrador da plataforma. Use o e-mail e senha que você recebeu.</>
+        )
       }
     >
       {registered && (

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Plus, Sparkles, Wrench } from "lucide-react";
-import { moduleGroups, adminModuleGroup } from "@/config/modules";
+import { moduleGroups, adminModuleGroup, platformModuleGroup } from "@/config/modules";
 import { cn } from "@/lib/utils";
 import { UserMenu } from "@/components/layout/user-menu";
 import { isAdminRole } from "@/lib/roles";
@@ -14,6 +14,8 @@ type SidebarProps = {
     tenantName: string;
     role: string;
     roleKey: string;
+    logoUrl?: string | null;
+    isSuperAdmin?: boolean;
   };
 };
 
@@ -86,7 +88,11 @@ function NavGroup({
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const showAdmin = isAdminRole(user.roleKey);
-  const groups = showAdmin ? [...moduleGroups, adminModuleGroup] : moduleGroups;
+  const groups = [
+    ...moduleGroups,
+    ...(showAdmin ? [adminModuleGroup] : []),
+    ...(user.isSuperAdmin ? [platformModuleGroup] : []),
+  ];
 
   return (
     <aside className="dark-scroll flex h-full w-[280px] shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar)]">
@@ -94,16 +100,25 @@ export function Sidebar({ user }: SidebarProps) {
       <div className="relative overflow-hidden border-b border-[var(--sidebar-border)] px-5 py-5">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(234,88,12,0.15),transparent_60%)]" />
         <div className="relative flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/25">
-            <Wrench className="h-5 w-5 text-white" />
-          </div>
+          {user.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.logoUrl}
+              alt={user.tenantName}
+              className="h-11 w-11 rounded-xl object-contain bg-white p-1"
+            />
+          ) : (
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover,#c2410c)] shadow-lg shadow-orange-500/25">
+              <Wrench className="h-5 w-5 text-white" />
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold tracking-tight text-white">
               {user.tenantName}
             </p>
             <p className="flex items-center gap-1 text-[11px] text-slate-500">
               <Sparkles className="h-3 w-3 text-orange-400/80" />
-              SAASMecanica
+              Mecânica & Elétrica
             </p>
           </div>
         </div>
@@ -113,7 +128,7 @@ export function Sidebar({ user }: SidebarProps) {
       <div className="border-b border-[var(--sidebar-border)] p-4">
         <Link
           href="/ordens/nova"
-          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition-all hover:from-orange-400 hover:to-orange-500 hover:shadow-orange-500/30 active:scale-[0.98]"
+          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover,#c2410c)] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition-all hover:opacity-95 active:scale-[0.98]"
         >
           <Plus className="h-4 w-4" />
           Nova OS — entrada

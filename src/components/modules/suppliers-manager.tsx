@@ -158,7 +158,7 @@ export function SuppliersManager({ suppliers }: { suppliers: Supplier[] }) {
               name="category"
               options={SUPPLIER_CATEGORIES}
               defaultValue={editing?.category ?? ""}
-              placeholder="Ex: Funilaria e pintura, Peças automotivas..."
+              placeholder="Ex: Elétrica e baterias, Peças automotivas..."
               required
             />
           </div>

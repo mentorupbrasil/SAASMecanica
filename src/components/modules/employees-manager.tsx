@@ -8,6 +8,9 @@ import {
   deleteEmployee,
   updateEmployee,
 } from "@/lib/actions/employees";
+import { EMPLOYEE_SPECIALTIES } from "@/lib/catalogs";
+import { CategorySelect } from "@/components/forms/category-select";
+import { EMPLOYEE_TYPE_LABELS, employeeTypeLabel } from "@/lib/workshop-labels";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -37,14 +40,6 @@ type Employee = {
   hourlyRate: { toString(): string } | number;
   hireDate: Date | string | null;
   birthDate: Date | string | null;
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  MECHANIC: "Mecânico",
-  ADVISOR: "Consultor",
-  MANAGER: "Gerente",
-  ADMIN: "Administrador",
-  OTHER: "Outro",
 };
 
 function toDateInputValue(value: Date | string | null | undefined) {
@@ -138,7 +133,7 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
                     <div className="text-xs text-slate-400">{e.email ?? ""}</div>
                   </TD>
                   <TD>
-                    <Badge variant="info">{TYPE_LABELS[e.type] ?? e.type}</Badge>
+                    <Badge variant="info">{employeeTypeLabel(e.type)}</Badge>
                   </TD>
                   <TD>{formatDateBR(e.hireDate)}</TD>
                   <TD>
@@ -200,12 +195,12 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
             </div>
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <Select name="type" defaultValue={editing?.type ?? "MECHANIC"}>
-                <option value="MECHANIC">Mecânico</option>
-                <option value="ADVISOR">Consultor</option>
-                <option value="MANAGER">Gerente</option>
-                <option value="ADMIN">Administrador</option>
-                <option value="OTHER">Outro</option>
+              <Select name="type" defaultValue={editing?.type ?? "ELECTROMECHANIC"}>
+                {Object.entries(EMPLOYEE_TYPE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </Select>
             </div>
           </div>
@@ -239,7 +234,12 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
           </div>
           <div className="space-y-2">
             <Label>Especialidade</Label>
-            <Input name="specialty" defaultValue={editing?.specialty ?? ""} />
+            <CategorySelect
+              name="specialty"
+              options={EMPLOYEE_SPECIALTIES}
+              defaultValue={editing?.specialty ?? ""}
+              placeholder="Ex: Elétrica automotiva, Injeção eletrônica..."
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

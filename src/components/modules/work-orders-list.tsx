@@ -16,6 +16,7 @@ import {
   TH,
   TR,
 } from "@/components/crud/data-table";
+import { TECHNICIAN_COLUMN } from "@/lib/workshop-labels";
 import { formatCurrency } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -97,7 +98,7 @@ export function WorkOrdersList({ workOrders }: { workOrders: WorkOrder[] }) {
               <TH>Cliente</TH>
               <TH>Veículo</TH>
               <TH>Status</TH>
-              <TH>Mecânico</TH>
+              <TH>{TECHNICIAN_COLUMN}</TH>
               <TH>Itens</TH>
               <TH>Total</TH>
               <TH>Aberta em</TH>

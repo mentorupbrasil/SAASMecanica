@@ -31,7 +31,10 @@ export async function getAdminOverview() {
   const [tenant, usersCount, activeUsers, recentLogs] = await Promise.all([
     prisma.tenant.findUnique({
       where: { id: tenantId },
-      include: { _count: { select: { users: true, customers: true, workOrders: true } } },
+      include: {
+        branches: { where: { isMain: true }, take: 1 },
+        _count: { select: { users: true, customers: true, workOrders: true } },
+      },
     }),
     prisma.user.count({ where: { tenantId } }),
     prisma.user.count({ where: { tenantId, active: true } }),
@@ -166,12 +169,44 @@ export async function updateTenantSettings(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim() || null;
   const email = String(formData.get("email") ?? "").trim() || null;
+  const document = String(formData.get("document") ?? "").trim() || null;
+  const logoUrl = String(formData.get("logoUrl") ?? "").trim() || null;
+  const brandColor = String(formData.get("brandColor") ?? "").trim() || "#ea580c";
+  const address = String(formData.get("address") ?? "").trim() || null;
+  const city = String(formData.get("city") ?? "").trim() || null;
+  const state = String(formData.get("state") ?? "").trim() || null;
+  const zipCode = String(formData.get("zipCode") ?? "").trim() || null;
 
   if (name.length < 3) throw new Error("Nome da oficina inválido");
 
-  await prisma.tenant.update({
-    where: { id: tenantId },
-    data: { name, phone, email },
+  await prisma.$transaction(async (tx) => {
+    await tx.tenant.update({
+      where: { id: tenantId },
+      data: { name, phone, email, document, logoUrl, brandColor },
+    });
+
+    const mainBranch = await tx.branch.findFirst({
+      where: { tenantId, isMain: true },
+    });
+
+    if (mainBranch) {
+      await tx.branch.update({
+        where: { id: mainBranch.id },
+        data: { address, city, state, zipCode },
+      });
+    } else {
+      await tx.branch.create({
+        data: {
+          tenantId,
+          name: "Matriz",
+          isMain: true,
+          address,
+          city,
+          state,
+          zipCode,
+        },
+      });
+    }
   });
 
   revalidatePath("/admin");

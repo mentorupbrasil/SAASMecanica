@@ -13,6 +13,7 @@ import {
   updateWorkOrderStatus,
 } from "@/lib/actions/work-orders";
 import { DocumentShareButtons } from "@/components/modules/document-share-buttons";
+import { TECHNICIAN_COLUMN } from "@/lib/workshop-labels";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -146,7 +147,7 @@ export function WorkOrderDetail({
             </div>
             {workOrder.assignedMechanic ? (
               <div>
-                <p className="text-xs uppercase text-slate-400">Mecânico</p>
+                <p className="text-xs uppercase text-slate-400">{TECHNICIAN_COLUMN}</p>
                 <p className="font-medium">{workOrder.assignedMechanic.name}</p>
               </div>
             ) : null}

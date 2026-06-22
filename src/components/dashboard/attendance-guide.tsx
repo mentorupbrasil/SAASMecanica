@@ -29,7 +29,7 @@ const steps = [
   {
     n: 3,
     title: "Diagnóstico e orçamento na OS",
-    text: "Mecânico analisa, adiciona peças/serviços na OS. Se o cliente precisa aprovar antes, mude o status para Aguard. aprovação.",
+    text: "A equipe técnica analisa (mecânica e/ou elétrica), adiciona peças e serviços na OS. Se o cliente precisa aprovar antes, mude o status para Aguard. aprovação.",
     links: [{ href: "/kanban", label: "Ver no Kanban", icon: ClipboardList }],
   },
   {
@@ -44,7 +44,7 @@ export function AttendanceGuide() {
   return (
     <Card className="border-orange-200/60 bg-gradient-to-br from-orange-50/50 via-white to-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]">
       <CardHeader>
-        <CardTitle className="text-lg">Como atender — fluxo da oficina</CardTitle>
+        <CardTitle className="text-lg">Como atender — fluxo da eletromecânica</CardTitle>
         <CardDescription>
           Regra de ouro: <strong>cliente na porta → Nova OS</strong>. Orçamento separado só quando o cliente
           ainda não deixou o carro ou quer aprovar antes de começar.
@@ -59,7 +59,7 @@ export function AttendanceGuide() {
             <ol className="space-y-1 text-sm text-emerald-900">
               <li>1. Busque cliente/placa no topo ou cadastre se for novo</li>
               <li>2. <strong>Nova OS</strong> → km + o que o cliente reclamou</li>
-              <li>3. Diagnóstico → peças/serviços na OS</li>
+              <li>3. Diagnóstico mecânico/elétrico → peças e serviços na OS</li>
               <li>4. Kanban até entregar o veículo</li>
             </ol>
             <Link href="/ordens/nova" className="mt-3 inline-block">

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/session";
+import { TECHNICAL_EMPLOYEE_TYPES } from "@/lib/workshop-labels";
 
 export async function getDashboardStats() {
   const tenantId = await requireTenantId();
@@ -97,7 +98,7 @@ export async function getDashboardStats() {
   });
 
   const mechanics = await prisma.employee.findMany({
-    where: { tenantId, active: true, type: "MECHANIC" },
+    where: { tenantId, active: true, type: { in: [...TECHNICAL_EMPLOYEE_TYPES] } },
     select: { id: true, name: true },
   });
 

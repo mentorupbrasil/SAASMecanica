@@ -16,7 +16,8 @@ model Tenant {
   document  String?  // CNPJ da oficina
   email     String?
   phone     String?
-  logoUrl   String?
+  logoUrl     String?
+  brandColor  String?  @default("#ea580c")
   plan      Plan     @default(STARTER)
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -212,6 +213,8 @@ model Vehicle {
 
 enum EmployeeType {
   MECHANIC
+  ELECTRICIAN
+  ELECTROMECHANIC
   ADVISOR
   MANAGER
   ADMIN

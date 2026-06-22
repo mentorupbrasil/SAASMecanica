@@ -66,7 +66,7 @@ export const moduleGroups: ModuleGroup[] = [
         title: "Agenda",
         href: "/agenda",
         icon: Calendar,
-        description: "Agendamentos, boxes e mecânicos",
+        description: "Agendamentos, boxes e técnicos",
       },
       {
         title: "Inspeção Digital",
@@ -96,7 +96,7 @@ export const moduleGroups: ModuleGroup[] = [
         title: "Funcionários",
         href: "/funcionarios",
         icon: Wrench,
-        description: "Equipe, comissões e especialidades",
+        description: "Equipe mecânica, elétrica e comissões",
       },
       {
         title: "Fornecedores",
@@ -167,6 +167,19 @@ export const moduleGroups: ModuleGroup[] = [
     ],
   },
 ];
+
+export const platformModuleGroup: ModuleGroup = {
+  title: "Plataforma",
+  items: [
+    {
+      title: "Empresas clientes",
+      href: "/platform",
+      icon: Building2,
+      description: "Criar e liberar acesso às oficinas",
+      badge: "SaaS",
+    },
+  ],
+};
 
 export const adminModuleGroup: ModuleGroup = {
   title: "Administração",

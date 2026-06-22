@@ -1,6 +1,7 @@
 import { Plus_Jakarta_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import { Providers } from "@/components/providers";
+import { WORKSHOP_DESCRIPTION, WORKSHOP_NAME, WORKSHOP_TAGLINE } from "@/lib/workshop-labels";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -10,9 +11,8 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SAASMecanica — Gestão de Oficina Mecânica",
-  description:
-    "Sistema SaaS completo para gestão de oficinas mecânicas: OS, orçamentos, estoque, financeiro e muito mais.",
+  title: `${WORKSHOP_NAME} — ${WORKSHOP_TAGLINE}`,
+  description: WORKSHOP_DESCRIPTION,
 };
 
 export default function RootLayout({

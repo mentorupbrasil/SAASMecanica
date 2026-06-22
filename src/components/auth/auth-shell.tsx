@@ -1,4 +1,5 @@
 import { Wrench, CheckCircle2 } from "lucide-react";
+import { WORKSHOP_TAGLINE } from "@/lib/workshop-labels";
 
 type AuthShellProps = {
   title: string;
@@ -8,8 +9,9 @@ type AuthShellProps = {
 };
 
 const features = [
-  "Ordens de serviço e orçamentos",
-  "Controle de estoque e financeiro",
+  "Mecânica, elétrica e diagnóstico na OS",
+  "Orçamentos com aprovação digital",
+  "Estoque, financeiro e equipe técnica",
   "Multi-usuário por oficina",
 ];
 
@@ -34,10 +36,10 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
             <h2 className="text-3xl font-bold leading-tight tracking-tight text-white">
               Gestão profissional
               <br />
-              para sua oficina
+              para sua eletromecânica
             </h2>
             <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-slate-400">
-              Tudo o que você precisa para organizar clientes, veículos, OS e faturamento em um só lugar.
+              {WORKSHOP_TAGLINE}. Organize clientes, veículos, serviços elétricos e mecânicos em um só lugar.
             </p>
           </div>
           <ul className="space-y-3.5">

@@ -14,6 +14,7 @@ import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TECHNICIAN_LABEL, employeeTypeLabel } from "@/lib/workshop-labels";
 
 type CustomerOption = { id: string; name: string; document?: string | null; phone?: string | null };
 type VehicleOption = {
@@ -24,7 +25,7 @@ type VehicleOption = {
   customerId: string;
   mileage?: unknown;
 };
-type MechanicOption = { id: string; name: string };
+type MechanicOption = { id: string; name: string; type?: string };
 type CatalogOption = { id: string; name: string; price: number };
 
 export function WorkOrderForm({
@@ -70,12 +71,13 @@ export function WorkOrderForm({
               <Input name="mileageIn" type="number" min={0} placeholder="Km atual" />
             </div>
             <div className="space-y-2">
-              <Label>Mecânico responsável</Label>
+              <Label>{TECHNICIAN_LABEL}</Label>
               <Select name="assignedMechanicId">
                 <option value="">Não atribuído</option>
                 {mechanics.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
+                    {m.type ? ` — ${employeeTypeLabel(m.type)}` : ""}
                   </option>
                 ))}
               </Select>
@@ -87,7 +89,7 @@ export function WorkOrderForm({
               name="complaint"
               rows={3}
               required
-              placeholder="O que o cliente relatou? Ex: barulho na suspensão, luz da injeção acesa..."
+              placeholder="O que o cliente relatou? Ex: luz da injeção acesa, farol queimado, barulho na suspensão, alternador fraco..."
             />
           </div>
           <div className="space-y-2">

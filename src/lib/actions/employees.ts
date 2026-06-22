@@ -5,12 +5,22 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/session";
 
+import { TECHNICAL_EMPLOYEE_TYPES } from "@/lib/workshop-labels";
+
 const schema = z.object({
   name: z.string().min(2),
   document: z.string().optional(),
   email: z.string().optional(),
   phone: z.string().optional(),
-  type: z.enum(["MECHANIC", "ADVISOR", "MANAGER", "ADMIN", "OTHER"]),
+  type: z.enum([
+    "MECHANIC",
+    "ELECTRICIAN",
+    "ELECTROMECHANIC",
+    "ADVISOR",
+    "MANAGER",
+    "ADMIN",
+    "OTHER",
+  ]),
   specialty: z.string().optional(),
   commissionRate: z.coerce.number().min(0).default(0),
   hourlyRate: z.coerce.number().min(0).default(0),
@@ -84,8 +94,8 @@ export async function deleteEmployee(id: string) {
 export async function listMechanicsOptions() {
   const tenantId = await requireTenantId();
   return prisma.employee.findMany({
-    where: { tenantId, active: true, type: { in: ["MECHANIC", "OTHER"] } },
-    select: { id: true, name: true },
+    where: { tenantId, active: true, type: { in: [...TECHNICAL_EMPLOYEE_TYPES] } },
+    select: { id: true, name: true, type: true },
     orderBy: { name: "asc" },
   });
 }

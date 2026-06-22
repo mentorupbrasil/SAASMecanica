@@ -28,4 +28,13 @@ export async function requireAdmin() {
   return session;
 }
 
+export async function requireSuperAdmin() {
+  const session = await requireSession();
+  const { isSuperAdminEmail } = await import("@/lib/super-admin");
+  if (!isSuperAdminEmail(session.user.email)) {
+    redirect("/");
+  }
+  return session;
+}
+
 export { isAdminRole } from "@/lib/roles";

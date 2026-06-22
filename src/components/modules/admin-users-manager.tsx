@@ -28,7 +28,7 @@ const roleLabels: Record<string, string> = {
   OWNER: "Proprietário",
   MANAGER: "Gerente",
   ADVISOR: "Consultor",
-  MECHANIC: "Mecânico",
+  MECHANIC: "Técnico",
   STOCK: "Estoque",
   FINANCE: "Financeiro",
   RECEPTION: "Recepção",
