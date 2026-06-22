@@ -2,14 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import {
   createService,
   deleteService,
   updateService,
 } from "@/lib/actions/services";
+import { SERVICE_CATEGORIES, SERVICE_PRESETS } from "@/lib/catalogs";
+import { CategorySelect } from "@/components/forms/category-select";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/crud/modal";
 import {
   DataTable,
@@ -33,19 +36,36 @@ type Service = {
   warrantyDays: number;
 };
 
+type PresetDraft = {
+  name: string;
+  category: string;
+  price: number;
+  durationMin: number;
+  warrantyDays: number;
+};
+
 export function ServicesManager({ services }: { services: Service[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Service | null>(null);
+  const [preset, setPreset] = useState<PresetDraft | null>(null);
   const [pending, startTransition] = useTransition();
 
   function openNew() {
     setEditing(null);
+    setPreset(null);
     setOpen(true);
   }
 
   function openEdit(s: Service) {
     setEditing(s);
+    setPreset(null);
+    setOpen(true);
+  }
+
+  function openPreset(p: (typeof SERVICE_PRESETS)[number]) {
+    setEditing(null);
+    setPreset({ ...p });
     setOpen(true);
   }
 
@@ -62,6 +82,25 @@ export function ServicesManager({ services }: { services: Service[] }) {
 
   return (
     <>
+      <div className="mb-4 rounded-xl border border-dashed border-orange-200 bg-orange-50/50 p-4">
+        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-orange-800">
+          <Sparkles className="h-4 w-4" /> Cadastro rápido — serviços comuns
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {SERVICE_PRESETS.map((p) => (
+            <Button
+              key={p.name}
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => openPreset(p)}
+            >
+              {p.name}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       <div className="mb-4 flex justify-end">
         <Button onClick={openNew}>
           <Plus className="h-4 w-4" /> Novo serviço
@@ -88,7 +127,9 @@ export function ServicesManager({ services }: { services: Service[] }) {
               services.map((s) => (
                 <TR key={s.id}>
                   <TD className="font-medium">{s.name}</TD>
-                  <TD>{s.category ?? "—"}</TD>
+                  <TD>
+                    {s.category ? <Badge variant="default">{s.category}</Badge> : "—"}
+                  </TD>
                   <TD>{formatCurrency(Number(s.price))}</TD>
                   <TD>{formatCurrency(Number(s.cost))}</TD>
                   <TD>{s.durationMin} min</TD>
@@ -122,16 +163,24 @@ export function ServicesManager({ services }: { services: Service[] }) {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={editing ? "Editar serviço" : "Novo serviço"}
+        title={editing ? "Editar serviço" : preset ? "Cadastro rápido" : "Novo serviço"}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form key={editing?.id ?? preset?.name ?? "new"} onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Nome *</Label>
-            <Input name="name" required defaultValue={editing?.name ?? ""} />
+            <Input
+              name="name"
+              required
+              defaultValue={editing?.name ?? preset?.name ?? ""}
+            />
           </div>
           <div className="space-y-2">
             <Label>Categoria</Label>
-            <Input name="category" defaultValue={editing?.category ?? ""} />
+            <CategorySelect
+              name="category"
+              options={SERVICE_CATEGORIES}
+              defaultValue={editing?.category ?? preset?.category ?? ""}
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -142,7 +191,7 @@ export function ServicesManager({ services }: { services: Service[] }) {
                 min={0}
                 step="0.01"
                 required
-                defaultValue={Number(editing?.price ?? 0)}
+                defaultValue={Number(editing?.price ?? preset?.price ?? 0)}
               />
             </div>
             <div className="space-y-2">
@@ -163,7 +212,7 @@ export function ServicesManager({ services }: { services: Service[] }) {
                 name="durationMin"
                 type="number"
                 min={0}
-                defaultValue={editing?.durationMin ?? 60}
+                defaultValue={editing?.durationMin ?? preset?.durationMin ?? 60}
               />
             </div>
             <div className="space-y-2">
@@ -172,7 +221,7 @@ export function ServicesManager({ services }: { services: Service[] }) {
                 name="warrantyDays"
                 type="number"
                 min={0}
-                defaultValue={editing?.warrantyDays ?? 0}
+                defaultValue={editing?.warrantyDays ?? preset?.warrantyDays ?? 0}
               />
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Cake, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   createEmployee,
   deleteEmployee,
@@ -35,6 +35,8 @@ type Employee = {
   specialty: string | null;
   commissionRate: { toString(): string } | number;
   hourlyRate: { toString(): string } | number;
+  hireDate: Date | string | null;
+  birthDate: Date | string | null;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -44,6 +46,31 @@ const TYPE_LABELS: Record<string, string> = {
   ADMIN: "Administrador",
   OTHER: "Outro",
 };
+
+function toDateInputValue(value: Date | string | null | undefined) {
+  if (!value) return "";
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDateBR(value: Date | string | null | undefined) {
+  if (!value) return "—";
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("pt-BR");
+}
+
+function isBirthdaySoon(value: Date | string | null | undefined) {
+  if (!value) return false;
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const thisYear = new Date(today.getFullYear(), date.getMonth(), date.getDate());
+  const diff = (thisYear.getTime() - today.getTime()) / 86400000;
+  return diff >= 0 && diff <= 7;
+}
 
 export function EmployeesManager({ employees }: { employees: Employee[] }) {
   const router = useRouter();
@@ -87,9 +114,9 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
               <TH>Nome</TH>
               <TH>Contato</TH>
               <TH>Tipo</TH>
-              <TH>Especialidade</TH>
+              <TH>Admissão</TH>
+              <TH>Aniversário</TH>
               <TH>Comissão</TH>
-              <TH>Hora</TH>
               <TH className="w-24">Ações</TH>
             </TR>
           </THead>
@@ -103,6 +130,7 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
                     <div className="font-medium">{e.name}</div>
                     <div className="text-xs text-slate-400">
                       {e.document ? formatDocument(e.document) : ""}
+                      {e.specialty ? ` · ${e.specialty}` : ""}
                     </div>
                   </TD>
                   <TD>
@@ -112,9 +140,23 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
                   <TD>
                     <Badge variant="info">{TYPE_LABELS[e.type] ?? e.type}</Badge>
                   </TD>
-                  <TD>{e.specialty ?? "—"}</TD>
-                  <TD>{Number(e.commissionRate)}%</TD>
-                  <TD>{formatCurrency(Number(e.hourlyRate))}</TD>
+                  <TD>{formatDateBR(e.hireDate)}</TD>
+                  <TD>
+                    <div className="flex items-center gap-1.5">
+                      {formatDateBR(e.birthDate)}
+                      {isBirthdaySoon(e.birthDate) && (
+                        <Badge variant="orange" className="gap-0.5">
+                          <Cake className="h-3 w-3" /> Em breve
+                        </Badge>
+                      )}
+                    </div>
+                  </TD>
+                  <TD>
+                    <div>{Number(e.commissionRate)}%</div>
+                    <div className="text-xs text-slate-400">
+                      {formatCurrency(Number(e.hourlyRate))}/h
+                    </div>
+                  </TD>
                   <TD>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
@@ -174,10 +216,24 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
             </div>
             <div className="space-y-2">
               <Label>E-mail</Label>
+              <Input name="email" type="email" defaultValue={editing?.email ?? ""} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Data de admissão</Label>
               <Input
-                name="email"
-                type="email"
-                defaultValue={editing?.email ?? ""}
+                name="hireDate"
+                type="date"
+                defaultValue={toDateInputValue(editing?.hireDate)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Data de nascimento</Label>
+              <Input
+                name="birthDate"
+                type="date"
+                defaultValue={toDateInputValue(editing?.birthDate)}
               />
             </div>
           </div>

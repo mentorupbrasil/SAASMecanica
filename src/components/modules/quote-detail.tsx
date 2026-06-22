@@ -12,6 +12,7 @@ import {
   removeQuoteItem,
   sendQuote,
 } from "@/lib/actions/quotes";
+import { DocumentShareButtons } from "@/components/modules/document-share-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -88,7 +89,7 @@ export function QuoteDetail({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [itemType, setItemType] = useState<"SERVICE" | "PART">("SERVICE");
+  const [itemType, setItemType] = useState<"SERVICE" | "PART" | "OTHER">("SERVICE");
   const [approvalLink, setApprovalLink] = useState<string | null>(
     quote.approvalToken
       ? `${typeof window !== "undefined" ? window.location.origin : ""}/aprovacao/${quote.approvalToken}`
@@ -173,6 +174,21 @@ export function QuoteDetail({
             Subtotal: {formatCurrency(Number(quote.subtotal))}
           </p>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <DocumentShareButtons
+          docType="ORCAMENTO"
+          number={quote.number}
+          customerName={quote.customer.name}
+          customerPhone={quote.customer.phone}
+          vehiclePlate={quote.vehicle.plate}
+          vehicleBrand={quote.vehicle.brand}
+          vehicleModel={quote.vehicle.model}
+          items={quote.items}
+          total={Number(quote.total)}
+          notes={quote.notes}
+        />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -276,30 +292,44 @@ export function QuoteDetail({
               <Select
                 name="type"
                 value={itemType}
-                onChange={(e) => setItemType(e.target.value as "SERVICE" | "PART")}
-                className="w-36"
+                onChange={(e) => setItemType(e.target.value as "SERVICE" | "PART" | "OTHER")}
+                className="w-40"
               >
                 <option value="SERVICE">Serviço</option>
                 <option value="PART">Peça</option>
+                <option value="OTHER">Terceiro / outro</option>
               </Select>
             </div>
-            <div className="min-w-[200px] flex-1 space-y-1">
-              <Label>{itemType === "SERVICE" ? "Serviço" : "Peça"}</Label>
-              <Select name="refId" required className="w-full">
-                <option value="">Selecione</option>
-                {itemType === "SERVICE"
-                  ? services.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} — {formatCurrency(Number(s.price))}
-                      </option>
-                    ))
-                  : products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} — {formatCurrency(Number(p.salePrice))}
-                      </option>
-                    ))}
-              </Select>
-            </div>
+            {itemType === "OTHER" ? (
+              <>
+                <div className="min-w-[200px] flex-1 space-y-1">
+                  <Label>Descrição</Label>
+                  <Input name="customDescription" required placeholder="Funilaria, guincho..." />
+                </div>
+                <div className="space-y-1">
+                  <Label>Valor (R$)</Label>
+                  <Input name="customPrice" type="number" min={0.01} step="0.01" required className="w-28" />
+                </div>
+              </>
+            ) : (
+              <div className="min-w-[200px] flex-1 space-y-1">
+                <Label>{itemType === "SERVICE" ? "Serviço" : "Peça"}</Label>
+                <Select name="refId" required className="w-full">
+                  <option value="">Selecione</option>
+                  {itemType === "SERVICE"
+                    ? services.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} — {formatCurrency(Number(s.price))}
+                        </option>
+                      ))
+                    : products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} — {formatCurrency(Number(p.salePrice))}
+                        </option>
+                      ))}
+                </Select>
+              </div>
+            )}
             <div className="space-y-1">
               <Label>Qtd</Label>
               <Input name="quantity" type="number" min={1} step={1} defaultValue={1} className="w-20" />
@@ -329,8 +359,20 @@ export function QuoteDetail({
                 quote.items.map((item) => (
                   <TR key={item.id}>
                     <TD>
-                      <Badge variant={item.type === "SERVICE" ? "info" : "default"}>
-                        {item.type === "SERVICE" ? "Serviço" : "Peça"}
+                      <Badge
+                        variant={
+                          item.type === "SERVICE"
+                            ? "info"
+                            : item.type === "OTHER"
+                              ? "orange"
+                              : "default"
+                        }
+                      >
+                        {item.type === "SERVICE"
+                          ? "Serviço"
+                          : item.type === "OTHER"
+                            ? "Terceiro"
+                            : "Peça"}
                       </Badge>
                     </TD>
                     <TD>{item.description}</TD>

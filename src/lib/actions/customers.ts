@@ -102,7 +102,7 @@ export async function listCustomersOptions() {
   const tenantId = await requireTenantId();
   return prisma.customer.findMany({
     where: { tenantId, active: true },
-    select: { id: true, name: true, document: true },
+    select: { id: true, name: true, document: true, phone: true },
     orderBy: { name: "asc" },
   });
 }

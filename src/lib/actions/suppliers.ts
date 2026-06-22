@@ -11,14 +11,32 @@ const schema = z.object({
   email: z.string().optional(),
   phone: z.string().optional(),
   contact: z.string().optional(),
+  category: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
 });
 
-export async function listSuppliers() {
+function parseSupplier(formData: FormData) {
+  return schema.parse({
+    name: formData.get("name"),
+    document: formData.get("document") || undefined,
+    email: formData.get("email") || undefined,
+    phone: formData.get("phone") || undefined,
+    contact: formData.get("contact") || undefined,
+    category: formData.get("category") || undefined,
+    city: formData.get("city") || undefined,
+    state: formData.get("state") || undefined,
+  });
+}
+
+export async function listSuppliers(category?: string) {
   const tenantId = await requireTenantId();
   return prisma.supplier.findMany({
-    where: { tenantId, active: true },
+    where: {
+      tenantId,
+      active: true,
+      ...(category && category !== "ALL" ? { category } : {}),
+    },
     include: { _count: { select: { products: true } } },
     orderBy: { name: "asc" },
   });
@@ -26,30 +44,14 @@ export async function listSuppliers() {
 
 export async function createSupplier(formData: FormData) {
   const tenantId = await requireTenantId();
-  const data = schema.parse({
-    name: formData.get("name"),
-    document: formData.get("document") || undefined,
-    email: formData.get("email") || undefined,
-    phone: formData.get("phone") || undefined,
-    contact: formData.get("contact") || undefined,
-    city: formData.get("city") || undefined,
-    state: formData.get("state") || undefined,
-  });
+  const data = parseSupplier(formData);
   await prisma.supplier.create({ data: { tenantId, ...data } });
   revalidatePath("/fornecedores");
 }
 
 export async function updateSupplier(id: string, formData: FormData) {
   const tenantId = await requireTenantId();
-  const data = schema.parse({
-    name: formData.get("name"),
-    document: formData.get("document") || undefined,
-    email: formData.get("email") || undefined,
-    phone: formData.get("phone") || undefined,
-    contact: formData.get("contact") || undefined,
-    city: formData.get("city") || undefined,
-    state: formData.get("state") || undefined,
-  });
+  const data = parseSupplier(formData);
   await prisma.supplier.updateMany({ where: { id, tenantId }, data });
   revalidatePath("/fornecedores");
 }
@@ -64,7 +66,7 @@ export async function listSuppliersOptions() {
   const tenantId = await requireTenantId();
   return prisma.supplier.findMany({
     where: { tenantId, active: true },
-    select: { id: true, name: true },
+    select: { id: true, name: true, category: true },
     orderBy: { name: "asc" },
   });
 }

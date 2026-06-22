@@ -8,6 +8,7 @@ import {
   deleteVehicle,
   updateVehicle,
 } from "@/lib/actions/vehicles";
+import { VehicleModelPicker } from "@/components/forms/vehicle-model-picker";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -166,23 +167,13 @@ export function VehiclesManager({
             </div>
             <div className="space-y-2">
               <Label>Ano</Label>
-              <Input
-                name="year"
-                type="number"
-                defaultValue={editing?.year ?? ""}
-              />
+              <Input name="year" type="number" defaultValue={editing?.year ?? ""} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Marca *</Label>
-              <Input name="brand" required defaultValue={editing?.brand ?? ""} />
-            </div>
-            <div className="space-y-2">
-              <Label>Modelo *</Label>
-              <Input name="model" required defaultValue={editing?.model ?? ""} />
-            </div>
-          </div>
+          <VehicleModelPicker
+            defaultBrand={editing?.brand ?? ""}
+            defaultModel={editing?.model ?? ""}
+          />
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Cor</Label>

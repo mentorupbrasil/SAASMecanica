@@ -8,8 +8,11 @@ import {
   deleteSupplier,
   updateSupplier,
 } from "@/lib/actions/suppliers";
+import { SUPPLIER_CATEGORIES } from "@/lib/catalogs";
+import { CategorySelect } from "@/components/forms/category-select";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/crud/modal";
 import {
   DataTable,
@@ -30,6 +33,7 @@ type Supplier = {
   email: string | null;
   phone: string | null;
   contact: string | null;
+  category: string | null;
   city: string | null;
   state: string | null;
   _count: { products: number };
@@ -75,6 +79,7 @@ export function SuppliersManager({ suppliers }: { suppliers: Supplier[] }) {
           <THead>
             <TR>
               <TH>Nome</TH>
+              <TH>Tipo</TH>
               <TH>CNPJ</TH>
               <TH>Contato</TH>
               <TH>Cidade</TH>
@@ -84,7 +89,7 @@ export function SuppliersManager({ suppliers }: { suppliers: Supplier[] }) {
           </THead>
           <TBody>
             {suppliers.length === 0 ? (
-              <EmptyRow colSpan={6} message="Nenhum fornecedor cadastrado" />
+              <EmptyRow colSpan={7} message="Nenhum fornecedor cadastrado" />
             ) : (
               suppliers.map((s) => (
                 <TR key={s.id}>
@@ -92,6 +97,13 @@ export function SuppliersManager({ suppliers }: { suppliers: Supplier[] }) {
                     <div className="font-medium">{s.name}</div>
                     {s.contact && (
                       <div className="text-xs text-slate-400">{s.contact}</div>
+                    )}
+                  </TD>
+                  <TD>
+                    {s.category ? (
+                      <Badge variant="default">{s.category}</Badge>
+                    ) : (
+                      "—"
                     )}
                   </TD>
                   <TD>{s.document ? formatDocument(s.document) : "—"}</TD>
@@ -140,6 +152,16 @@ export function SuppliersManager({ suppliers }: { suppliers: Supplier[] }) {
             <Label>Nome *</Label>
             <Input name="name" required defaultValue={editing?.name ?? ""} />
           </div>
+          <div className="space-y-2">
+            <Label>Tipo de fornecimento *</Label>
+            <CategorySelect
+              name="category"
+              options={SUPPLIER_CATEGORIES}
+              defaultValue={editing?.category ?? ""}
+              placeholder="Ex: Funilaria e pintura, Peças automotivas..."
+              required
+            />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>CNPJ</Label>
@@ -157,11 +179,7 @@ export function SuppliersManager({ suppliers }: { suppliers: Supplier[] }) {
             </div>
             <div className="space-y-2">
               <Label>E-mail</Label>
-              <Input
-                name="email"
-                type="email"
-                defaultValue={editing?.email ?? ""}
-              />
+              <Input name="email" type="email" defaultValue={editing?.email ?? ""} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -171,11 +189,7 @@ export function SuppliersManager({ suppliers }: { suppliers: Supplier[] }) {
             </div>
             <div className="space-y-2">
               <Label>UF</Label>
-              <Input
-                name="state"
-                maxLength={2}
-                defaultValue={editing?.state ?? ""}
-              />
+              <Input name="state" maxLength={2} defaultValue={editing?.state ?? ""} />
             </div>
           </div>
           <Button type="submit" className="w-full" disabled={pending}>

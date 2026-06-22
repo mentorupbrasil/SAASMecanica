@@ -18,12 +18,13 @@ const schema = z.object({
   location: z.string().optional(),
 });
 
-export async function listProducts(search?: string) {
+export async function listProducts(search?: string, category?: string) {
   const tenantId = await requireTenantId();
   return prisma.product.findMany({
     where: {
       tenantId,
       active: true,
+      ...(category && category !== "ALL" ? { category } : {}),
       ...(search
         ? {
             OR: [
@@ -34,7 +35,7 @@ export async function listProducts(search?: string) {
         : {}),
     },
     include: { supplier: { select: { name: true } } },
-    orderBy: { name: "asc" },
+    orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 }
 

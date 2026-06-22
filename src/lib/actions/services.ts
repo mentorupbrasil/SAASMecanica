@@ -15,11 +15,15 @@ const schema = z.object({
   warrantyDays: z.coerce.number().int().min(0).default(0),
 });
 
-export async function listServices() {
+export async function listServices(category?: string) {
   const tenantId = await requireTenantId();
   return prisma.serviceCatalog.findMany({
-    where: { tenantId, active: true },
-    orderBy: { name: "asc" },
+    where: {
+      tenantId,
+      active: true,
+      ...(category && category !== "ALL" ? { category } : {}),
+    },
+    orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 }
 

@@ -232,6 +232,7 @@ model Employee {
   commissionRate Decimal      @default(0) @db.Decimal(5, 2)
   hourlyRate     Decimal      @default(0) @db.Decimal(10, 2)
   hireDate       DateTime?
+  birthDate      DateTime?
   active         Boolean      @default(true)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -256,6 +257,7 @@ model Supplier {
   email     String?
   phone     String?
   contact   String?
+  category  String?  // Peças, Funilaria, Guincho, etc.
   street    String?
   city      String?
   state     String?

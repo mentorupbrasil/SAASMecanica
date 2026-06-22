@@ -14,7 +14,26 @@ const schema = z.object({
   specialty: z.string().optional(),
   commissionRate: z.coerce.number().min(0).default(0),
   hourlyRate: z.coerce.number().min(0).default(0),
+  hireDate: z.string().optional(),
+  birthDate: z.string().optional(),
 });
+
+function parseEmployee(formData: FormData) {
+  const hireRaw = String(formData.get("hireDate") ?? "");
+  const birthRaw = String(formData.get("birthDate") ?? "");
+  return schema.parse({
+    name: formData.get("name"),
+    document: formData.get("document") || undefined,
+    email: formData.get("email") || undefined,
+    phone: formData.get("phone") || undefined,
+    type: formData.get("type") || "MECHANIC",
+    specialty: formData.get("specialty") || undefined,
+    commissionRate: formData.get("commissionRate") || 0,
+    hourlyRate: formData.get("hourlyRate") || 0,
+    hireDate: hireRaw || undefined,
+    birthDate: birthRaw || undefined,
+  });
+}
 
 export async function listEmployees() {
   const tenantId = await requireTenantId();
@@ -26,33 +45,33 @@ export async function listEmployees() {
 
 export async function createEmployee(formData: FormData) {
   const tenantId = await requireTenantId();
-  const data = schema.parse({
-    name: formData.get("name"),
-    document: formData.get("document") || undefined,
-    email: formData.get("email") || undefined,
-    phone: formData.get("phone") || undefined,
-    type: formData.get("type") || "MECHANIC",
-    specialty: formData.get("specialty") || undefined,
-    commissionRate: formData.get("commissionRate") || 0,
-    hourlyRate: formData.get("hourlyRate") || 0,
+  const parsed = parseEmployee(formData);
+  const { hireDate, birthDate, ...data } = parsed;
+
+  await prisma.employee.create({
+    data: {
+      tenantId,
+      ...data,
+      hireDate: hireDate ? new Date(hireDate) : null,
+      birthDate: birthDate ? new Date(birthDate) : null,
+    },
   });
-  await prisma.employee.create({ data: { tenantId, ...data } });
   revalidatePath("/funcionarios");
 }
 
 export async function updateEmployee(id: string, formData: FormData) {
   const tenantId = await requireTenantId();
-  const data = schema.parse({
-    name: formData.get("name"),
-    document: formData.get("document") || undefined,
-    email: formData.get("email") || undefined,
-    phone: formData.get("phone") || undefined,
-    type: formData.get("type") || "MECHANIC",
-    specialty: formData.get("specialty") || undefined,
-    commissionRate: formData.get("commissionRate") || 0,
-    hourlyRate: formData.get("hourlyRate") || 0,
+  const parsed = parseEmployee(formData);
+  const { hireDate, birthDate, ...data } = parsed;
+
+  await prisma.employee.updateMany({
+    where: { id, tenantId },
+    data: {
+      ...data,
+      hireDate: hireDate ? new Date(hireDate) : null,
+      birthDate: birthDate ? new Date(birthDate) : null,
+    },
   });
-  await prisma.employee.updateMany({ where: { id, tenantId }, data });
   revalidatePath("/funcionarios");
 }
 

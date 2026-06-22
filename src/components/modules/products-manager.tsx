@@ -8,6 +8,8 @@ import {
   deleteProduct,
   updateProduct,
 } from "@/lib/actions/products";
+import { PRODUCT_CATEGORIES } from "@/lib/catalogs";
+import { CategorySelect } from "@/components/forms/category-select";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -40,7 +42,7 @@ type Product = {
   supplier: { name: string } | null;
 };
 
-type SupplierOption = { id: string; name: string };
+type SupplierOption = { id: string; name: string; category?: string | null };
 
 function isLowStock(product: Product) {
   return Number(product.stockQty) <= Number(product.minStock);
@@ -181,7 +183,11 @@ export function ProductsManager({
             </div>
             <div className="space-y-2">
               <Label>Categoria</Label>
-              <Input name="category" defaultValue={editing?.category ?? ""} />
+              <CategorySelect
+                name="category"
+                options={PRODUCT_CATEGORIES}
+                defaultValue={editing?.category ?? ""}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -199,6 +205,7 @@ export function ProductsManager({
                 {supplierOptions.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
+                    {s.category ? ` (${s.category})` : ""}
                   </option>
                 ))}
               </Select>

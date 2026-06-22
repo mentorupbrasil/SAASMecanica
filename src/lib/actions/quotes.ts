@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { nextQuoteNumber, nextWorkOrderNumber } from "@/lib/numbers";
+import {
+  persistQuoteItems,
+  resolveCustomerId,
+  resolveVehicleId,
+} from "@/lib/actions/document-items";
+import { parseItemsJson } from "@/lib/line-items";
 import { requireTenantId } from "@/lib/session";
 
 function calcItemTotal(qty: number, price: number, discount = 0) {
@@ -52,54 +58,84 @@ export async function getQuote(id: string) {
 
 export async function createQuote(formData: FormData) {
   const tenantId = await requireTenantId();
-  const customerId = String(formData.get("customerId"));
-  const vehicleId = String(formData.get("vehicleId"));
   const notes = String(formData.get("notes") || "") || null;
   const validDays = Number(formData.get("validDays") || 7);
+  const discount = Number(formData.get("discount") || 0);
+  const items = parseItemsJson(formData);
 
   const number = await nextQuoteNumber(tenantId);
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + validDays);
 
-  const quote = await prisma.quote.create({
-    data: {
-      tenantId,
-      customerId,
-      vehicleId,
-      number,
-      notes,
-      validUntil,
-      status: "DRAFT",
-    },
+  const quote = await prisma.$transaction(async (tx) => {
+    const customerId = await resolveCustomerId(tx, tenantId, formData);
+    const vehicleId = await resolveVehicleId(tx, tenantId, customerId, formData);
+
+    const q = await tx.quote.create({
+      data: {
+        tenantId,
+        customerId,
+        vehicleId,
+        number,
+        notes,
+        validUntil,
+        status: "DRAFT",
+        discount,
+      },
+    });
+
+    if (items.length > 0) {
+      await persistQuoteItems(tx, tenantId, q.id, items);
+      const subtotal = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+      await tx.quote.update({
+        where: { id: q.id },
+        data: { subtotal, total: subtotal - discount },
+      });
+    }
+
+    return q;
   });
 
   revalidatePath("/orcamentos");
+  revalidatePath("/clientes");
+  revalidatePath("/veiculos");
   return quote.id;
 }
 
 export async function addQuoteItem(formData: FormData) {
   const tenantId = await requireTenantId();
   const quoteId = String(formData.get("quoteId"));
-  const type = String(formData.get("type")) as "SERVICE" | "PART";
-  const refId = String(formData.get("refId"));
+  const type = String(formData.get("type")) as "SERVICE" | "PART" | "OTHER";
+  const refId = String(formData.get("refId") ?? "");
   const quantity = Number(formData.get("quantity") || 1);
+  const customDescription = String(formData.get("customDescription") ?? "");
+  const customPrice = Number(formData.get("customPrice") ?? 0);
 
   const quote = await prisma.quote.findFirst({ where: { id: quoteId, tenantId } });
   if (!quote) throw new Error("Orçamento não encontrado");
 
-  let description = "";
-  let unitPrice = 0;
+  let description = customDescription;
+  let unitPrice = customPrice;
+  let serviceId: string | null = null;
+  let productId: string | null = null;
 
-  if (type === "SERVICE") {
+  if (type === "SERVICE" && refId) {
     const s = await prisma.serviceCatalog.findFirst({ where: { id: refId, tenantId } });
     if (!s) throw new Error("Serviço não encontrado");
     description = s.name;
     unitPrice = Number(s.price);
-  } else {
+    serviceId = s.id;
+  } else if (type === "PART" && refId) {
     const p = await prisma.product.findFirst({ where: { id: refId, tenantId } });
     if (!p) throw new Error("Peça não encontrada");
     description = p.name;
     unitPrice = Number(p.salePrice);
+    productId = p.id;
+  } else if (type === "OTHER") {
+    if (!description.trim()) throw new Error("Informe a descrição");
+    if (unitPrice <= 0) throw new Error("Informe o valor");
+  } else {
+    throw new Error("Selecione um item");
   }
 
   const total = calcItemTotal(quantity, unitPrice);
@@ -112,8 +148,8 @@ export async function addQuoteItem(formData: FormData) {
       quantity,
       unitPrice,
       total,
-      serviceId: type === "SERVICE" ? refId : null,
-      productId: type === "PART" ? refId : null,
+      serviceId,
+      productId,
     },
   });
 

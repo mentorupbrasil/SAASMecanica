@@ -3,6 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { nextWorkOrderNumber } from "@/lib/numbers";
+import {
+  persistWorkOrderItems,
+  resolveCustomerId,
+  resolveVehicleId,
+} from "@/lib/actions/document-items";
+import { parseItemsJson } from "@/lib/line-items";
 import { requireTenantId } from "@/lib/session";
 
 const OPEN_STATUSES = [
@@ -93,16 +99,18 @@ export async function getWorkOrder(id: string) {
 
 export async function createWorkOrder(formData: FormData) {
   const tenantId = await requireTenantId();
-  const customerId = String(formData.get("customerId"));
-  const vehicleId = String(formData.get("vehicleId"));
   const mileageIn = Number(formData.get("mileageIn") || 0) || null;
   const customerNotes = String(formData.get("customerNotes") || "") || null;
   const assignedMechanicId = String(formData.get("assignedMechanicId") || "") || null;
   const complaint = String(formData.get("complaint") || "") || null;
+  const items = parseItemsJson(formData);
 
   const number = await nextWorkOrderNumber(tenantId);
 
   const wo = await prisma.$transaction(async (tx) => {
+    const customerId = await resolveCustomerId(tx, tenantId, formData);
+    const vehicleId = await resolveVehicleId(tx, tenantId, customerId, formData);
+
     const order = await tx.workOrder.create({
       data: {
         tenantId,
@@ -129,6 +137,15 @@ export async function createWorkOrder(formData: FormData) {
       });
     }
 
+    if (items.length > 0) {
+      await persistWorkOrderItems(tx, tenantId, order.id, items);
+      const subtotal = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+      await tx.workOrder.update({
+        where: { id: order.id },
+        data: { subtotal, total: subtotal },
+      });
+    }
+
     await tx.workOrderStatusHistory.create({
       data: { workOrderId: order.id, toStatus: "OPEN", notes: "OS aberta" },
     });
@@ -138,6 +155,8 @@ export async function createWorkOrder(formData: FormData) {
 
   revalidatePath("/ordens");
   revalidatePath("/kanban");
+  revalidatePath("/clientes");
+  revalidatePath("/veiculos");
   return wo.id;
 }
 
@@ -175,33 +194,40 @@ export async function updateWorkOrderStatus(
 export async function addWorkOrderItem(formData: FormData) {
   const tenantId = await requireTenantId();
   const workOrderId = String(formData.get("workOrderId"));
-  const type = String(formData.get("type")) as "SERVICE" | "PART";
-  const refId = String(formData.get("refId"));
+  const type = String(formData.get("type")) as "SERVICE" | "PART" | "OTHER";
+  const refId = String(formData.get("refId") ?? "");
   const quantity = Number(formData.get("quantity") || 1);
+  const customDescription = String(formData.get("customDescription") ?? "");
+  const customPrice = Number(formData.get("customPrice") ?? 0);
 
   const wo = await prisma.workOrder.findFirst({ where: { id: workOrderId, tenantId } });
   if (!wo) throw new Error("OS não encontrada");
 
-  let description = "";
-  let unitPrice = 0;
+  let description = customDescription;
+  let unitPrice = customPrice;
   let costPrice = 0;
   let productId: string | null = null;
   let serviceId: string | null = null;
 
-  if (type === "SERVICE") {
+  if (type === "SERVICE" && refId) {
     const s = await prisma.serviceCatalog.findFirst({ where: { id: refId, tenantId } });
     if (!s) throw new Error("Serviço não encontrado");
     description = s.name;
     unitPrice = Number(s.price);
     costPrice = Number(s.cost);
     serviceId = s.id;
-  } else {
+  } else if (type === "PART" && refId) {
     const p = await prisma.product.findFirst({ where: { id: refId, tenantId } });
     if (!p) throw new Error("Peça não encontrada");
     description = p.name;
     unitPrice = Number(p.salePrice);
     costPrice = Number(p.costPrice);
     productId = p.id;
+  } else if (type === "OTHER") {
+    if (!description.trim()) throw new Error("Informe a descrição");
+    if (unitPrice <= 0) throw new Error("Informe o valor");
+  } else {
+    throw new Error("Selecione um item");
   }
 
   const total = quantity * unitPrice;
